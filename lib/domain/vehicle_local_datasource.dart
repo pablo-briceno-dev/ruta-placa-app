@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:ruta_placa/domain/vehicle.dart';
+import 'package:ruta_placa/models/vehicle.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class VehicleLocalDatasource {

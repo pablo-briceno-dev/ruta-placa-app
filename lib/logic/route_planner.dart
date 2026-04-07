@@ -27,6 +27,7 @@ class RoutePlanner {
       final result = PicoPlacaCalculator.checkPlate(
         cityId: stop.cityId,
         plate: stop.plateNumber,
+        vehicleType: stop.vehicleType,
         date: stop.arrivalDate,
       );
       return StopResult(

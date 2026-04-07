@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:ruta_placa/domain/vehicle.dart';
+import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/domain/vehicle_local_datasource.dart';
 
 final vehicleDataSourceProvider = Provider((ref) {
