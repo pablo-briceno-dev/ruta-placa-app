@@ -13,6 +13,15 @@ final vehiclesProvider =
       return VehiclesNotifier(dataSource)..loadVehicles();
     });
 
+final defaultVehicleProvider = Provider<Vehicle?>((ref) {
+  final vehicles = ref.watch(vehiclesProvider);
+  try {
+    return vehicles.values.firstWhere((v) => v.isDefault);
+  } catch (_) {
+    return vehicles.isNotEmpty ? vehicles.values.first : null;
+  }
+});
+
 class VehiclesNotifier extends StateNotifier<Map<String, Vehicle>> {
   final VehicleLocalDatasource dataSource;
 

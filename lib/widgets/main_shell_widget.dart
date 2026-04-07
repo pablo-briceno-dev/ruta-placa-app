@@ -16,7 +16,6 @@ class MainShellWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
-    debugPrint('location: $location');
     final currentIndex = _locationToIndex(location);
 
     return Scaffold(
