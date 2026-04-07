@@ -8,7 +8,7 @@ class RutaPlacaTheme {
   static const _primaryGreen = Color(0xFF1DB954); // verde vía libre
   static const _primaryGreenDark = Color(0xFF17A349);
   static const _errorRed = Color(0xFFE53935);
-  static const _warningAmber = Color(0xFFFFA000);
+  // static const _warningAmber = Color(0xFFFFA000);
   static const _surfaceLight = Color(0xFFF5F5F5);
   static const _surfaceDark = Color(0xFF1E1E1E);
   static const _cardLight = Color(0xFFFFFFFF);
@@ -137,7 +137,7 @@ class RutaPlacaTheme {
     ),
     chipTheme: ChipThemeData(
       backgroundColor: _surfaceLight,
-      selectedColor: _primaryGreen.withValues(alpha: 0.15),
+      selectedColor: _primaryGreen.withOpacity(0.15),
       labelStyle: const TextStyle(fontFamily: 'Poppins', fontSize: 13),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     ),
@@ -223,7 +223,7 @@ class RutaPlacaTheme {
     ),
     chipTheme: ChipThemeData(
       backgroundColor: const Color(0xFF2A2A2A),
-      selectedColor: _primaryGreen.withValues(alpha: 0.2),
+      selectedColor: _primaryGreen.withOpacity(0.2),
       labelStyle: const TextStyle(
         fontFamily: 'Poppins',
         fontSize: 13,

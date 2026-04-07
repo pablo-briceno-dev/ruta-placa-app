@@ -1,21 +1,37 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:ruta_placa/app.dart';
+import 'package:ruta_placa/core/router.dart';
+import 'package:ruta_placa/core/theme.dart';
+import 'package:ruta_placa/providers/theme_provider.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Orientación solo vertical
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+  runApp(const ProviderScope(child: MyApp()));
+}
 
-  // Inicializamos AdMob
-  await MobileAds.instance.initialize();
-  // AdmobService.instance.loadInterstitial();
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
-  runApp(const ProviderScope(child: RutaPlacaApp()));
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeModeProvider);
+
+    return MaterialApp.router(
+      title: 'RutaPlaca',
+      debugShowCheckedModeBanner: false,
+      theme: RutaPlacaTheme.light,
+      darkTheme: RutaPlacaTheme.dark,
+      themeMode: themeMode,
+      routerConfig: appRouter,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('es', 'CO')],
+    );
+  }
 }

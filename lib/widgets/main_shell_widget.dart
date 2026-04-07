@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class MainShell extends StatelessWidget {
+class MainShellWidget extends StatelessWidget {
   final Widget child;
 
-  const MainShell({super.key, required this.child});
+  const MainShellWidget({super.key, required this.child});
 
   int _locationToIndex(String location) {
     if (location.startsWith('/calendar')) return 1;
@@ -16,6 +16,7 @@ class MainShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.toString();
+    debugPrint('location: $location');
     final currentIndex = _locationToIndex(location);
 
     return Scaffold(
@@ -38,25 +39,25 @@ class MainShell extends StatelessWidget {
               break;
           }
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            icon: const Icon(Icons.home_outlined),
+            activeIcon: const Icon(Icons.home),
             label: 'Inicio',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_month_outlined),
-            activeIcon: Icon(Icons.calendar_month),
+            icon: const Icon(Icons.calendar_month_outlined),
+            activeIcon: const Icon(Icons.calendar_month),
             label: 'Calendario',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.route_outlined),
-            activeIcon: Icon(Icons.route),
+            icon: const Icon(Icons.route_outlined),
+            activeIcon: const Icon(Icons.route),
             label: 'Ruta',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings_outlined),
-            activeIcon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings_outlined),
+            activeIcon: const Icon(Icons.settings),
             label: 'Ajustes',
           ),
         ],

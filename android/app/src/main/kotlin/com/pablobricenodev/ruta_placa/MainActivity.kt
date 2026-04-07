@@ -1,4 +1,4 @@
-package com.example.ruta_placa
+package com.pablobricenodev.ruta_placa
 
 import io.flutter.embedding.android.FlutterActivity
 
