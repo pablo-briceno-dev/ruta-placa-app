@@ -20,7 +20,7 @@ class MyApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'RutaPlaca',
+      title: 'RutaPlaca App',
       debugShowCheckedModeBanner: false,
       theme: RutaPlacaTheme.light,
       darkTheme: RutaPlacaTheme.dark,
