@@ -4,6 +4,7 @@ import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/screens/home/city_search_sheet.dart';
 
 class AddVehicleScreen extends ConsumerStatefulWidget {
   const AddVehicleScreen({super.key});
@@ -21,6 +22,11 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
 
   String _selectedCity = 'bogota';
   VehicleType _vehicleType = VehicleType.particular;
+
+  String _getCityName(String cityId, RulesState rulesCities) {
+    final city = rulesCities.cities.firstWhere((c) => c.id == cityId);
+    return city.name;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -70,21 +76,24 @@ class _AddVehicleScreenState extends ConsumerState<AddVehicleScreen> {
               const SizedBox(height: 16),
 
               // 🏙️ CIUDAD
-              DropdownButtonFormField<String>(
-                initialValue: _selectedCity,
-                items: List.generate(rulesCities.cities.length, (index) {
-                  final city = rulesCities.cities[index];
-                  return DropdownMenuItem(
-                    value: city.id,
-                    child: Text(city.name),
+              InkWell(
+                onTap: () async {
+                  final selected = await showModalBottomSheet<String>(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (_) => CitySearchSheet(cities: rulesCities.cities),
                   );
-                }),
-                onChanged: (value) {
-                  setState(() => _selectedCity = value!);
+
+                  if (selected != null) {
+                    setState(() => _selectedCity = selected);
+                  }
                 },
-                decoration: const InputDecoration(
-                  labelText: 'Ciudad',
-                  border: OutlineInputBorder(),
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    labelText: 'Ciudad',
+                    border: OutlineInputBorder(),
+                  ),
+                  child: Text(_getCityName(_selectedCity, rulesCities)),
                 ),
               ),
 

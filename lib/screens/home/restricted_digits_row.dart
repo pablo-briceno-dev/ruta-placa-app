@@ -24,7 +24,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final vehicle = ref.watch(defaultVehicleProvider);
-    final city = ref.watch(cityByIdProvider(vehicle?.cityId ?? cityId));
+    final city = ref.watch(cityByIdProvider(cityId));
     final resultPlate = PicoPlacaCalculator.checkPlate(
       cityRule: city,
       plate: vehicle?.plate ?? plate,

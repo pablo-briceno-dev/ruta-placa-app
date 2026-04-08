@@ -16,7 +16,7 @@ class HomeScreen extends ConsumerWidget {
     final defaultVehicle = ref.watch(defaultVehicleProvider);
     final selectedCity = ref.watch(selectedCityProvider);
     final city = ref.watch(
-      cityByIdProvider(defaultVehicle?.cityId ?? selectedCity ?? 'bogota'),
+      cityByIdProvider(selectedCity ?? defaultVehicle?.cityId ?? 'bogota'),
     );
 
     return Scaffold(
@@ -40,7 +40,7 @@ class HomeScreen extends ConsumerWidget {
           // !Banner Ad (parte superior o inferior de la pantalla)
           // const AdBannerWidget(),
           Expanded(
-            child: SingleChildScrollView(
+            child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -24,10 +24,10 @@ class Vehicle {
   };
 
   factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
-    plate: json['plate'] as String,
-    vehicleTypeIndex: json['vehicleTypeIndex'] as int,
-    alias: json['alias'] as String,
-    cityId: json['cityId'] as String,
+    plate: json['plate'] ?? '',
+    vehicleTypeIndex: json['vehicleTypeIndex'] ?? 0,
+    alias: json['alias'] ?? '',
+    cityId: json['cityId'] ?? 'bogota',
   );
 
   int get lastDigit {

@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final selectedCityProvider =
     StateNotifierProvider<SelectedCityNotifier, String?>(
-      (ref) => SelectedCityNotifier(),
+      (ref) => SelectedCityNotifier()..loadCity(),
     );
 
 class SelectedCityNotifier extends StateNotifier<String?> {
