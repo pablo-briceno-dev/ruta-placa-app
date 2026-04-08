@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ruta_placa/data/cities_repository.dart';
 import 'package:ruta_placa/data/holidays_co.dart';
+import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/vehicle_restriction.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
@@ -20,14 +20,13 @@ class PicoPlacaResult {
 
 class PicoPlacaCalculator {
   static PicoPlacaResult checkPlate({
-    required String cityId,
+    CityRule? cityRule,
     required String plate,
     required VehicleType vehicleType, // ← nuevo parámetro
     required DateTime date,
     TimeOfDay? time,
   }) {
-    final rule = CitiesRepository.getCityRule(cityId);
-    if (rule == null) {
+    if (cityRule == null) {
       return const PicoPlacaResult(
         hasRestriction: false,
         restrictedPlates: [],
@@ -54,7 +53,7 @@ class PicoPlacaCalculator {
     }
 
     // Obtener la restricción específica para este tipo de vehículo
-    final restriction = rule.restrictionFor(vehicleType);
+    final restriction = cityRule.restrictionFor(vehicleType);
 
     // Este tipo no tiene restricción en esta ciudad
     if (!restriction.hasRestriction) {

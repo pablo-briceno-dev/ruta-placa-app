@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
+import 'package:ruta_placa/services/rules_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await RulesService.instance.init();
 
   runApp(const ProviderScope(child: MyApp()));
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle.dart';
+import 'package:ruta_placa/providers/rules_provider.dart';
 
 class MyVehicleCard extends ConsumerWidget {
   final Vehicle vehicle;
@@ -11,8 +12,9 @@ class MyVehicleCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final city = ref.watch(cityByIdProvider(vehicle.cityId));
     final resultPlate = PicoPlacaCalculator.checkPlate(
-      cityId: vehicle.cityId,
+      cityRule: city,
       plate: vehicle.plate,
       vehicleType: vehicle.vehicleType,
       date: DateTime.now(),

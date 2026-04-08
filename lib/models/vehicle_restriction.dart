@@ -23,6 +23,9 @@ class VehicleRestriction {
     this.note,
   });
 
+  bool get hasRestriction => schedule.isNotEmpty;
+  List<int> platesForDay(DateTime date) => schedule[date.weekday] ?? [];
+
   // Sin restricción para este tipo de vehículo
   static const none = VehicleRestriction(
     schedule: {},
@@ -30,7 +33,41 @@ class VehicleRestriction {
     morningEnd: TimeOfDay(hour: 0, minute: 0),
   );
 
-  bool get hasRestriction => schedule.isNotEmpty;
+  factory VehicleRestriction.fromJson(Map<String, dynamic> json) {
+    final rawSchedule = json['schedule'] as Map<String, dynamic>;
+    final schedule = rawSchedule.map(
+      (key, value) => MapEntry(int.parse(key), List<int>.from(value as List)),
+    );
 
-  List<int> platesForDay(DateTime date) => schedule[date.weekday] ?? [];
+    return VehicleRestriction(
+      schedule: schedule,
+      morningStart: _parseTime(json['morningStart']),
+      morningEnd: _parseTime(json['morningEnd']),
+      afternoonStart: json['afternoonStart'] != null
+          ? _parseTime(json['afternoonStart'])
+          : null,
+      afternoonEnd: json['afternoonEnd'] != null
+          ? _parseTime(json['afternoonEnd'])
+          : null,
+      note: json['note'] as String?,
+    );
+  }
+
+  // "07:30" → TimeOfDay(hour: 7, minute: 30)
+  static TimeOfDay _parseTime(String raw) {
+    final parts = raw.split(':');
+    return TimeOfDay(hour: int.parse(parts[0]), minute: int.parse(parts[1]));
+  }
+
+  Map<String, dynamic> toJson() => {
+    'schedule': schedule.map((key, value) => MapEntry(key.toString(), value)),
+    'morningStart': _formatTime(morningStart),
+    'morningEnd': _formatTime(morningEnd),
+    if (afternoonStart != null) 'afternoonStart': _formatTime(afternoonStart!),
+    if (afternoonEnd != null) 'afternoonEnd': _formatTime(afternoonEnd!),
+    'note': note,
+  };
+
+  static String _formatTime(TimeOfDay t) =>
+      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
 }

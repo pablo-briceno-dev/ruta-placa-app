@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/utils/date_utils.dart';
-import 'package:ruta_placa/data/cities_repository.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
+import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 
 class RestrictedDigitsRow extends ConsumerWidget {
@@ -24,9 +24,9 @@ class RestrictedDigitsRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final vehicle = ref.watch(defaultVehicleProvider);
-    final rule = CitiesRepository.getCityRule(vehicle?.cityId ?? cityId);
+    final city = ref.watch(cityByIdProvider(vehicle?.cityId ?? cityId));
     final resultPlate = PicoPlacaCalculator.checkPlate(
-      cityId: vehicle?.cityId ?? cityId,
+      cityRule: city,
       plate: vehicle?.plate ?? plate,
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: DateTime.now(),
@@ -58,7 +58,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
                 children: List.generate(_allPlates.length, (index) {
                   final digit = _allPlates[index];
                   final result = PicoPlacaCalculator.checkPlate(
-                    cityId: cityId,
+                    cityRule: city,
                     plate: digit,
                     vehicleType: vehicleType, // ← automático desde el modelo
                     date: DateTime.now(),
@@ -91,6 +91,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
+                  flex: 2,
                   child: !resultPlate.hasRestriction
                       ? Container(
                           padding: const EdgeInsets.all(10),
@@ -98,18 +99,62 @@ class RestrictedDigitsRow extends ConsumerWidget {
                             color: theme.chipTheme.selectedColor,
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text(
-                            'Sin pico y placa ${resultPlate.reason != null ? ': ${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}'
-                                .toUpperCase(),
-                            style: TextStyle(fontWeight: FontWeight.bold),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Sin pico y placa - $plate ${resultPlate.reason != null ? '\n${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}'
+                                    .toUpperCase(),
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              if (resultPlate.reason != null)
+                                Text(
+                                  resultPlate.reason!.toUpperCase(),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              if (resultPlate.note != null)
+                                Text(
+                                  resultPlate.note!.toUpperCase(),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                            ],
                           ),
                         )
-                      : Text(''),
+                      : Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.error.withValues(
+                              alpha: 0.55,
+                            ),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Con pico y placa - $plate ${resultPlate.reason != null ? '\n${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}'
+                                    .toUpperCase(),
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              if (resultPlate.reason != null)
+                                Text(
+                                  resultPlate.reason!.toUpperCase(),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              if (resultPlate.note != null)
+                                Text(
+                                  resultPlate.note!.toUpperCase(),
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                            ],
+                          ),
+                        ),
                 ),
                 Expanded(
+                  flex: 1,
                   child: Center(
                     child: Text(
-                      '${formatTime(context, rule?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now())} - ${formatTime(context, rule?.restrictions[vehicleType]?.morningEnd ?? TimeOfDay.now())}',
+                      '${formatTime(context, city?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now())} - ${formatTime(context, city?.restrictions[vehicleType]?.morningEnd ?? TimeOfDay.now())}',
                     ),
                   ),
                 ),

@@ -1,4 +1,3 @@
-import 'package:ruta_placa/data/cities_repository.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/route_stop.dart';
 
@@ -23,16 +22,15 @@ class RoutePlannerResult {
 class RoutePlanner {
   static RoutePlannerResult evaluate({required List<RouteStop> stops}) {
     final results = stops.map((stop) {
-      final city = CitiesRepository.getCityRule(stop.cityId);
       final result = PicoPlacaCalculator.checkPlate(
-        cityId: stop.cityId,
+        cityRule: stop.cityRule,
         plate: stop.plateNumber,
         vehicleType: stop.vehicleType,
         date: stop.arrivalDate,
       );
       return StopResult(
         stop: stop,
-        cityName: city?.name ?? stop.cityId,
+        cityName: stop.cityRule.name,
         picoPlaca: result,
       );
     }).toList();
