@@ -4,14 +4,12 @@ class Vehicle {
   final String plate;
   final String alias;
   final String cityId;
-  bool isDefault;
   int vehicleTypeIndex;
 
   Vehicle({
     required this.plate,
     required this.alias,
     required this.cityId,
-    this.isDefault = false,
     this.vehicleTypeIndex = 0,
   });
 
@@ -26,11 +24,10 @@ class Vehicle {
   };
 
   factory Vehicle.fromJson(Map<String, dynamic> json) => Vehicle(
-    plate: json['plate'],
-    vehicleTypeIndex: json['vehicleTypeIndex'],
-    alias: json['alias'],
-    cityId: json['cityId'],
-    isDefault: json['isDefault'],
+    plate: json['plate'] as String,
+    vehicleTypeIndex: json['vehicleTypeIndex'] as int,
+    alias: json['alias'] as String,
+    cityId: json['cityId'] as String,
   );
 
   int get lastDigit {

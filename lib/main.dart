@@ -3,15 +3,24 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
+import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
 import 'package:ruta_placa/services/rules_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await RulesService.instance.init();
 
-  runApp(const ProviderScope(child: MyApp()));
+  final prefs = await SharedPreferences.getInstance();
+
+  runApp(
+    ProviderScope(
+      overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {

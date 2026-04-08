@@ -92,63 +92,35 @@ class RestrictedDigitsRow extends ConsumerWidget {
               children: [
                 Expanded(
                   flex: 2,
-                  child: !resultPlate.hasRestriction
-                      ? Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.chipTheme.selectedColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Sin pico y placa - $plate ${resultPlate.reason != null ? '\n${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}'
-                                    .toUpperCase(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              if (resultPlate.reason != null)
-                                Text(
-                                  resultPlate.reason!.toUpperCase(),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              if (resultPlate.note != null)
-                                Text(
-                                  resultPlate.note!.toUpperCase(),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                            ],
-                          ),
-                        )
-                      : Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.error.withValues(
-                              alpha: 0.55,
-                            ),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Con pico y placa - $plate ${resultPlate.reason != null ? '\n${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}'
-                                    .toUpperCase(),
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              if (resultPlate.reason != null)
-                                Text(
-                                  resultPlate.reason!.toUpperCase(),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              if (resultPlate.note != null)
-                                Text(
-                                  resultPlate.note!.toUpperCase(),
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                            ],
-                          ),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: resultPlate.hasRestriction
+                          ? theme.colorScheme.error.withValues(alpha: 0.55)
+                          : theme.chipTheme.selectedColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${resultPlate.hasRestriction ? 'Con pico y placa' : 'Sin pico y placa'} ${plate.isEmpty ? '' : '- $plate'}'
+                              .toUpperCase(),
+                          style: TextStyle(fontWeight: FontWeight.bold),
                         ),
+                        if (resultPlate.reason != null)
+                          Text(
+                            resultPlate.reason!.toUpperCase(),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        if (resultPlate.note != null)
+                          Text(
+                            resultPlate.note!.toUpperCase(),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                      ],
+                    ),
+                  ),
                 ),
                 Expanded(
                   flex: 1,

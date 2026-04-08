@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/domain/vehicle_local_datasource.dart';
+import 'package:ruta_placa/models/vehicle.dart';
+import 'package:ruta_placa/providers/shared_preferences_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+const _defaultVehicleKey = 'default_vehicle';
 
 final vehicleDataSourceProvider = Provider((ref) {
   return VehicleLocalDatasource();
@@ -15,11 +19,22 @@ final vehiclesProvider =
 
 final defaultVehicleProvider = Provider<Vehicle?>((ref) {
   final vehicles = ref.watch(vehiclesProvider);
-  try {
-    return vehicles.values.firstWhere((v) => v.isDefault);
-  } catch (_) {
-    return vehicles.isNotEmpty ? vehicles.values.first : null;
+  final prefs = ref.watch(sharedPrefsProvider);
+  final defaultPlate = prefs.getString(_defaultVehicleKey);
+
+  if (defaultPlate != null && vehicles.containsKey(defaultPlate)) {
+    return vehicles[defaultPlate];
   }
+
+  return vehicles.isNotEmpty ? vehicles.values.first : null;
+});
+
+final setDefaultVehicleProvider = Provider((ref) {
+  final prefs = ref.watch(sharedPrefsProvider);
+
+  return (String plate) async {
+    await prefs.setString(_defaultVehicleKey, plate);
+  };
 });
 
 class VehiclesNotifier extends StateNotifier<Map<String, Vehicle>> {
@@ -33,15 +48,35 @@ class VehiclesNotifier extends StateNotifier<Map<String, Vehicle>> {
   }
 
   Future<void> addOrUpdateVehicle(Vehicle vehicle) async {
-    final updated = {...state, vehicle.plate: vehicle};
+    final newState = <String, Vehicle>{};
 
-    state = updated;
-    await dataSource.saveVehiclesMap(updated);
+    for (final entry in state.entries) {
+      final v = entry.value;
+
+      newState[entry.key] = Vehicle(
+        plate: v.plate,
+        alias: v.alias,
+        cityId: v.cityId,
+        vehicleTypeIndex: v.vehicleTypeIndex,
+      );
+    }
+
+    newState[vehicle.plate] = vehicle;
+
+    state = newState;
+    await dataSource.saveVehiclesMap(newState);
   }
 
   Future<void> removeVehicle(String plate) async {
+    final prefs = await SharedPreferences.getInstance();
     final updated = Map<String, Vehicle>.from(state);
     updated.remove(plate);
+
+    // si eliminas el default → limpiar
+    final defaultPlate = prefs.getString(_defaultVehicleKey);
+    if (defaultPlate == plate) {
+      await prefs.remove(_defaultVehicleKey);
+    }
 
     state = updated;
     await dataSource.saveVehiclesMap(updated);
