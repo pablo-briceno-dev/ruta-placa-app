@@ -31,7 +31,6 @@ class RestrictedDigitsRow extends ConsumerWidget {
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: DateTime.now(),
     );
-    debugPrint('resultPlate: ${rule?.restrictions[vehicleType]?.morningStart}');
 
     return Card(
       child: Container(
@@ -45,7 +44,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
           children: [
             const Text(
               'Dígitos restringidos hoy',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Padding(
@@ -100,7 +99,8 @@ class RestrictedDigitsRow extends ConsumerWidget {
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            'Sin restricción ${resultPlate.reason != null ? ': ${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}',
+                            'Sin pico y placa ${resultPlate.reason != null ? ': ${resultPlate.reason})' : ''}${resultPlate.note != null ? '\n${resultPlate.note}' : ''}'
+                                .toUpperCase(),
                             style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         )
