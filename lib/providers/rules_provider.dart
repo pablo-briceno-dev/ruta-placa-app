@@ -4,19 +4,36 @@ import 'package:flutter_riverpod/legacy.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/services/rules_service.dart';
 
-enum RulesStatus { loading, ready, error }
+enum RulesStatus {
+  loading,
+  ready,
+  error,
+  updateAvailable,
+  checking,
+  downloading,
+}
 
 class RulesState {
   final RulesStatus status;
   final List<CityRule> cities;
   final String? error;
+  final double progress;
 
-  RulesState({required this.status, this.cities = const [], this.error});
+  RulesState({
+    required this.status,
+    this.cities = const [],
+    this.error,
+    this.progress = 0.0,
+  });
 }
 
 final rulesProvider = StateNotifierProvider<RulesNotifier, RulesState>(
   (ref) => RulesNotifier(),
 );
+
+final rulesInitProvider = FutureProvider<List<CityRule>>((ref) async {
+  return await RulesService.instance.loadRules();
+});
 
 // Provider derivado - buscar ciudad por id
 final cityByIdProvider = Provider.family<CityRule?, String>((ref, id) {
@@ -36,7 +53,14 @@ class RulesNotifier extends StateNotifier<RulesState> {
 
   Future<void> _load() async {
     try {
-      final cities = await RulesService.instance.loadRules();
+      final cities = await RulesService.instance.loadRules(
+        onProgress: (progress) {
+          state = RulesState(
+            status: RulesStatus.downloading,
+            progress: progress,
+          );
+        },
+      );
       state = RulesState(status: RulesStatus.ready, cities: cities);
     } catch (e) {
       state = RulesState(status: RulesStatus.error, error: e.toString());
@@ -46,10 +70,50 @@ class RulesNotifier extends StateNotifier<RulesState> {
   Future<void> refresh() async {
     state = RulesState(status: RulesStatus.loading);
     try {
-      final cities = await RulesService.instance.forceRefresh();
+      final cities = await RulesService.instance.forceRefresh(
+        onProgress: (progress) {
+          state = RulesState(
+            status: RulesStatus.downloading,
+            progress: progress,
+          );
+        },
+      );
       state = RulesState(status: RulesStatus.ready, cities: cities);
     } catch (e) {
       state = RulesState(status: RulesStatus.error, error: e.toString());
+    }
+  }
+
+  Future<void> checkForUpdates() async {
+    state = RulesState(status: RulesStatus.checking);
+
+    final hasUpdate = await RulesService.instance.hasNewVersion();
+    final cities = await RulesService.instance.loadRules(
+      onProgress: (progress) {
+        state = RulesState(status: RulesStatus.downloading, progress: progress);
+      },
+    );
+
+    state = RulesState(
+      status: hasUpdate ? RulesStatus.updateAvailable : RulesStatus.ready,
+      cities: cities,
+    );
+  }
+
+  Future<void> downloadUpdate() async {
+    state = RulesState(status: RulesStatus.downloading, progress: 0.0);
+    try {
+      final cities = await RulesService.instance.forceRefresh(
+        onProgress: (progress) {
+          state = RulesState(
+            status: RulesStatus.downloading,
+            progress: progress,
+          );
+        },
+      );
+      state = RulesState(status: RulesStatus.ready, cities: cities);
+    } catch (_) {
+      state = RulesState(status: RulesStatus.error);
     }
   }
 }

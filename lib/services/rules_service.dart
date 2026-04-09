@@ -22,6 +22,7 @@ class RulesService {
       'https://raw.githubusercontent.com/pablo-briceno-dev/ruta-placa-app-data/refs/heads/main/rules.json';
 
   static const _keyRules = 'rules_path';
+  static const _keyLastUpdated = 'rules_last_updated';
   static const _keyVersion = 'rules_version';
   static const _keyLastCheck = 'rules_last_check';
 
@@ -50,13 +51,15 @@ class RulesService {
   }
 
   // Llamar al iniciar la app
-  Future<List<CityRule>> loadRules() async {
+  Future<List<CityRule>> loadRules({
+    void Function(double progress)? onProgress,
+  }) async {
     final lastCheck = _prefs.getInt(_keyLastCheck);
     final shouldFetch = _shouldFetchFromNetwork(lastCheck);
 
     if (shouldFetch) {
       try {
-        final fresh = await _fetchFromNetwork();
+        final fresh = await _fetchFromNetwork(onProgress: onProgress);
         if (fresh != null) return fresh;
       } catch (_) {
         // Sin internet → usar caché
@@ -76,39 +79,71 @@ class RulesService {
     if (lastCheck == null) return true;
 
     final diff = DateTime.now().millisecondsSinceEpoch - lastCheck;
-    return diff > const Duration(hours: 24).inMilliseconds;
+
+    return diff > const Duration(hours: 12).inMilliseconds;
   }
 
-  Future<List<CityRule>?> _fetchFromNetwork() async {
-    final response = await http
-        .get(Uri.parse(_rulesUrl))
-        .timeout(const Duration(seconds: 10));
+  Future<List<CityRule>?> _fetchFromNetwork({
+    void Function(double progress)? onProgress,
+  }) async {
+    final request = http.Request('GET', Uri.parse(_rulesUrl));
+    final response = await request.send();
 
-    if (response.statusCode != 200) return null;
+    final total = response.contentLength ?? 0;
+    int received = 0;
 
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    debugPrint('json: $json');
+    final bytes = <int>[];
+
+    await for (final chunk in response.stream) {
+      bytes.addAll(chunk);
+      received += chunk.length;
+
+      if (total != 0) {
+        final progress = received / total;
+        onProgress?.call(progress);
+      }
+    }
+
+    final body = utf8.decode(bytes);
+
+    final json = jsonDecode(body) as Map<String, dynamic>;
+
     final newVersion = json['version'] as String;
+    final newLastUpdatedStr = json['lastUpdated'] as String;
+    final newLastUpdated = DateTime.parse(newLastUpdatedStr);
+
     final cachedVersion = _prefs.getString(_keyVersion);
+    final cachedLastUpdatedStr = _prefs.getString(_keyLastUpdated);
+    final cachedLastUpdated = cachedLastUpdatedStr != null
+        ? DateTime.tryParse(cachedLastUpdatedStr)
+        : null;
 
     // Guardar siempre el timestamp de la última consulta
     await _prefs.setInt(_keyLastCheck, DateTime.now().millisecondsSinceEpoch);
 
+    final isSameVersion = newVersion == cachedVersion;
+    final isSameDate =
+        cachedLastUpdated != null && !newLastUpdated.isAfter(cachedLastUpdated);
+
     // Si la versión no cambió, no hace falta re-parsear
-    if (newVersion == cachedVersion) {
+    if (isSameVersion && isSameDate) {
       final path = _prefs.getString(_keyRules);
       if (path == null) return _fallbackRules();
-      final content = await readRulesFromFile(path);
 
+      final content = await readRulesFromFile(path);
       return _loadFromCache(content);
     }
 
     // Nueva versión → guardar en caché
-    final path = await saveRulesToFile(response.body);
+    final path = await saveRulesToFile(body);
+
     await _prefs.setString(_keyRules, path);
     await _prefs.setString(_keyVersion, newVersion);
+    await _prefs.setString(_keyLastUpdated, newLastUpdatedStr);
 
-    debugPrint('RulesService: reglas actualizadas a $newVersion');
+    debugPrint(
+      'RulesService: reglas actualizadas a $newVersion ($newLastUpdatedStr)',
+    );
     return _parseRules(json);
   }
 
@@ -164,10 +199,33 @@ class RulesService {
   }
 
   // Forzar actualización (botón "Actualizar" en Settings)
-  Future<List<CityRule>> forceRefresh() async {
+  Future<List<CityRule>> forceRefresh({
+    void Function(double progress)? onProgress,
+  }) async {
     await _prefs.remove(_keyLastCheck);
-    return loadRules();
+    await _prefs.remove(_keyVersion);
+    await _prefs.remove(_keyLastUpdated);
+    return loadRules(onProgress: onProgress);
   }
 
   String? get cachedVersion => _prefs.getString(_keyVersion);
+
+  Future<bool> hasNewVersion() async {
+    try {
+      final response = await http
+          .get(Uri.parse(_rulesUrl))
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode != 200) return false;
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+
+      final newVersion = json['version'] as String;
+      final cachedVersion = _prefs.getString(_keyVersion);
+
+      return newVersion != cachedVersion;
+    } catch (_) {
+      return false;
+    }
+  }
 }

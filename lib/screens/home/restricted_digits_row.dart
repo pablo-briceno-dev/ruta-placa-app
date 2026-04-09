@@ -5,6 +5,7 @@ import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/widgets/restriction_timer_widget.dart';
 
 class RestrictedDigitsRow extends ConsumerWidget {
   final String cityId;
@@ -124,9 +125,23 @@ class RestrictedDigitsRow extends ConsumerWidget {
                 ),
                 Expanded(
                   flex: 1,
-                  child: Center(
-                    child: Text(
-                      '${formatTime(context, city?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now())} - ${formatTime(context, city?.restrictions[vehicleType]?.morningEnd ?? TimeOfDay.now())}',
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 1),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            '${formatTime(context, city?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now())} - ${formatTime(context, city?.restrictions[vehicleType]?.morningEnd ?? TimeOfDay.now())}',
+                          ),
+                          if (resultPlate.hasRestriction)
+                            RestrictionTimerWidget(
+                              endTime:
+                                  city?.restrictions[vehicleType]?.morningEnd ??
+                                  TimeOfDay.now(),
+                              isRestricted: resultPlate.hasRestriction,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

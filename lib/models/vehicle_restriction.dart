@@ -95,22 +95,14 @@ class VehicleRestriction {
     final weeksDiff = dateMonday.difference(startMonday).inDays ~/ 7;
     if (weeksDiff < 0) return [];
 
-    final daysPerWeek = rotation!.weekdaysApply.length; // 5
-
-    // Índice del lunes de esta semana en el ciclo TOTAL de días
-    // cycleLengthDays=10, semana0→índice0, semana1→índice5, semana2→índice0...
-    final mondayIndex = (weeksDiff * daysPerWeek) % rotation!.cycleLength;
-    debugPrint('daysPerWeek=$daysPerWeek');
-    debugPrint('mondayIndex=$mondayIndex');
-
-    // Días hábiles transcurridos desde el lunes hasta 'date'
     final daysFromMonday = rotation!.weekdaysApply
         .where((wd) => wd < date.weekday)
         .length;
 
+    // El lunes de la semana N empieza en índice N (no N*5)
+    // Dentro de la semana avanza día a día
     final finalIndex =
-        (mondayIndex + daysFromMonday) % rotation!.rotationCycle.length;
-    debugPrint('finalIndex=$finalIndex');
+        (weeksDiff + daysFromMonday) % rotation!.rotationCycle.length;
 
     return rotation!.rotationCycle[finalIndex];
   }
