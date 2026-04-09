@@ -155,6 +155,7 @@ class MyVehicleCard extends ConsumerWidget {
                         child: IconButton(
                           icon: Icon(
                             isDefault ? Icons.star : Icons.star_border,
+                            size: 30,
                           ),
                           color: theme.colorScheme.primaryContainer,
                           onPressed: () {
@@ -181,7 +182,7 @@ class MyVehicleCard extends ConsumerWidget {
                               ),
                             );
                           },
-                          icon: Icon(Icons.chevron_right),
+                          icon: Icon(Icons.chevron_right, size: 30),
                         ),
                       ),
                     ),
