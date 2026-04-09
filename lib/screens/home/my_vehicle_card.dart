@@ -5,11 +5,18 @@ import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
+import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/screens/home/form_vehicle_screen.dart';
 
 class MyVehicleCard extends ConsumerWidget {
   final Vehicle vehicle;
+  final bool isDefault;
 
-  const MyVehicleCard({super.key, required this.vehicle});
+  const MyVehicleCard({
+    super.key,
+    required this.vehicle,
+    this.isDefault = false,
+  });
 
   Icon _getIcon(VehicleType vehicleType, ThemeData theme, Color color) {
     switch (vehicleType) {
@@ -41,103 +48,148 @@ class MyVehicleCard extends ConsumerWidget {
       date: DateTime.now(),
     );
 
-    return Card(
-      elevation: 3,
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: resultPlate.hasRestriction
-              ? theme.colorScheme.error.withValues(alpha: 0.6)
-              : theme.colorScheme.primary.withValues(alpha: 0.6),
-          width: 1.5,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      child: Card(
+        elevation: 3,
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: resultPlate.hasRestriction
+                ? theme.colorScheme.error.withValues(alpha: 0.6)
+                : theme.colorScheme.primary.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            // 🚗 Icono
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // 🚗 Icono
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: _getIcon(
+                  vehicle.vehicleType,
+                  theme,
+                  resultPlate.hasRestriction
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primary,
+                ),
               ),
-              child: _getIcon(
-                vehicle.vehicleType,
-                theme,
-                resultPlate.hasRestriction
-                    ? theme.colorScheme.error
-                    : theme.colorScheme.primary,
-              ),
-            ),
 
-            const SizedBox(width: 16),
+              const SizedBox(width: 16),
 
-            // 📄 Info
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    vehicle.alias,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    vehicle.plate,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    city?.name ?? vehicle.cityId,
-                    style: TextStyle(color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              flex: 2,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    (resultPlate.hasRestriction
-                            ? 'Con pico y placa'
-                            : 'Sin pico y placa')
-                        .toUpperCase(),
-                    style: TextStyle(
-                      color: resultPlate.hasRestriction
-                          ? theme.colorScheme.error.withValues(alpha: 0.8)
-                          : theme.colorScheme.primary.withValues(alpha: 0.8),
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  if (resultPlate.reason != null)
+              // 📄 Info
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      resultPlate.reason!.toUpperCase(),
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      vehicle.alias,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  if (resultPlate.note != null)
+                    const SizedBox(height: 4),
                     Text(
-                      resultPlate.note!.toUpperCase(),
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                      vehicle.plate,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      city?.name ?? vehicle.cityId,
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            // ➡️ Flecha
-            const Icon(Icons.chevron_right),
-          ],
+
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      (resultPlate.hasRestriction
+                              ? 'Con pico y placa'
+                              : 'Sin pico y placa')
+                          .toUpperCase(),
+                      style: TextStyle(
+                        color: resultPlate.hasRestriction
+                            ? theme.colorScheme.error.withValues(alpha: 0.8)
+                            : theme.colorScheme.primary.withValues(alpha: 0.8),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (resultPlate.reason != null)
+                      Text(
+                        resultPlate.reason!.toUpperCase(),
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    if (resultPlate.note != null)
+                      Text(
+                        resultPlate.note!.toUpperCase(),
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                  ],
+                ),
+              ),
+              // ➡️ Flecha
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                          icon: Icon(
+                            isDefault ? Icons.star : Icons.star_border,
+                          ),
+                          color: theme.colorScheme.primaryContainer,
+                          onPressed: () {
+                            if (!isDefault) {
+                              debugPrint('isDefault = false');
+                              ref.read(setDefaultVehicleProvider)(
+                                vehicle.plate,
+                              );
+                            }
+                          },
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    FormVehicleScreen(vehicle: vehicle),
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.chevron_right),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

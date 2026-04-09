@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
-import 'package:ruta_placa/screens/home/add_vehicle_screen.dart';
+import 'package:ruta_placa/screens/home/form_vehicle_screen.dart';
 import 'package:ruta_placa/screens/home/my_vehicles.dart';
 import 'package:ruta_placa/screens/home/restricted_digits_row.dart';
 import 'package:ruta_placa/widgets/city_selector_button_widget.dart';
@@ -54,7 +54,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => const AddVehicleScreen()),
+                  MaterialPageRoute(builder: (_) => const FormVehicleScreen()),
                 );
               },
               child: const Icon(Icons.add),

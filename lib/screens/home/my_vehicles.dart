@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
-import 'package:ruta_placa/screens/home/add_vehicle_screen.dart';
+import 'package:ruta_placa/screens/home/form_vehicle_screen.dart';
 import 'package:ruta_placa/screens/home/my_vehicle_card.dart';
 
 class MyVehicles extends ConsumerWidget {
@@ -38,7 +38,9 @@ class MyVehicles extends ConsumerWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const AddVehicleScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const FormVehicleScreen(),
+                    ),
                   ),
                   label: Text('Agregar vehículo'),
                   icon: const Icon(Icons.add),
@@ -48,10 +50,35 @@ class MyVehicles extends ConsumerWidget {
                 ),
               ),
             ],
-            if (defaultVehicle != null) MyVehicleCard(vehicle: defaultVehicle),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 400),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: SlideTransition(
+                    position: Tween<Offset>(
+                      begin: const Offset(0, -0.2),
+                      end: Offset.zero,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: defaultVehicle != null
+                  ? MyVehicleCard(
+                      key: ValueKey(defaultVehicle.plate), // 🔥 CLAVE
+                      vehicle: defaultVehicle,
+                      isDefault: true,
+                    )
+                  : const SizedBox(),
+            ),
             ...vehicles.entries.map((vehicle) {
-              if (defaultVehicle!.plate != vehicle.value.plate) {
-                return MyVehicleCard(vehicle: vehicle.value);
+              if (defaultVehicle?.plate != vehicle.value.plate) {
+                return AnimatedOpacity(
+                  duration: const Duration(milliseconds: 300),
+                  opacity: 1,
+                  child: MyVehicleCard(vehicle: vehicle.value),
+                );
               }
               return const SizedBox();
             }),

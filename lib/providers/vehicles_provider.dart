@@ -17,10 +17,14 @@ final vehiclesProvider =
       return VehiclesNotifier(dataSource)..loadVehicles();
     });
 
+final defaultVehiclePlateProvider = StateProvider<String?>((ref) {
+  final prefs = ref.watch(sharedPrefsProvider);
+  return prefs.getString(_defaultVehicleKey);
+});
+
 final defaultVehicleProvider = Provider<Vehicle?>((ref) {
   final vehicles = ref.watch(vehiclesProvider);
-  final prefs = ref.watch(sharedPrefsProvider);
-  final defaultPlate = prefs.getString(_defaultVehicleKey);
+  final defaultPlate = ref.watch(defaultVehiclePlateProvider);
 
   if (defaultPlate != null && vehicles.containsKey(defaultPlate)) {
     return vehicles[defaultPlate];
@@ -34,6 +38,9 @@ final setDefaultVehicleProvider = Provider((ref) {
 
   return (String plate) async {
     await prefs.setString(_defaultVehicleKey, plate);
+
+    // 🔥 IMPORTANTE: actualizar estado reactivo
+    ref.read(defaultVehiclePlateProvider.notifier).state = plate;
   };
 });
 
