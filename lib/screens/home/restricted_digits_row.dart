@@ -104,7 +104,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${resultPlate.hasRestriction ? 'Con pico y placa' : 'Sin pico y placa'} ${plate.isEmpty ? '' : '- $plate'}'
+                          '${resultPlate.hasRestriction ? 'Con pico y placa' : 'Sin pico y placa'} ${plate.isEmpty ? '' : ' $plate'}'
                               .toUpperCase(),
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),

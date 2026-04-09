@@ -23,6 +23,12 @@ class CityRule {
   bool appliesTo(VehicleType type) =>
       restrictions[type]?.hasRestriction ?? false;
 
+  // Lista de tipos que SÍ tienen restricción (para mostrar en UI)
+  List<VehicleType> get restrictedTypes => restrictions.entries
+      .where((e) => e.value.hasRestriction)
+      .map((e) => e.key)
+      .toList();
+
   factory CityRule.fromJson(Map<String, dynamic> json) {
     final restrictionsList = json['restrictions'] as List<dynamic>;
     final restrictions = <VehicleType, VehicleRestriction>{};
@@ -31,7 +37,9 @@ class CityRule {
         (t) => t.name == r['vehicleType'],
         orElse: () => VehicleType.particular,
       );
-      restrictions[type] = VehicleRestriction.fromJson(r);
+      restrictions[type] = VehicleRestriction.fromJson(
+        r as Map<String, dynamic>,
+      );
     }
 
     return CityRule(
@@ -41,17 +49,4 @@ class CityRule {
       restrictions: restrictions,
     );
   }
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'name': name,
-    'emoji': emoji,
-    'restrictions': restrictions.entries
-        .map((e) => {'vehicleType': e.key.name, ...e.value.toJson()})
-        .toList(),
-  };
-
-  // Lista de tipos que SÍ tienen restricción (para mostrar en UI)
-  List<VehicleType> get restrictedTypes =>
-      restrictions.keys.where((t) => restrictions[t]!.hasRestriction).toList();
 }

@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:ruta_placa/models/city_rule.dart';
+import 'package:ruta_placa/models/rotation_rule.dart';
+import 'package:ruta_placa/models/schedule_type.dart';
 import 'package:ruta_placa/models/vehicle_restriction.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -61,7 +63,7 @@ class RulesService {
       }
     }
 
-    final path = _prefs.getString('rules_path');
+    final path = _prefs.getString(_keyRules);
     if (path == null) return _fallbackRules();
     final content = await readRulesFromFile(path);
 
@@ -85,6 +87,7 @@ class RulesService {
     if (response.statusCode != 200) return null;
 
     final json = jsonDecode(response.body) as Map<String, dynamic>;
+    debugPrint('json: $json');
     final newVersion = json['version'] as String;
     final cachedVersion = _prefs.getString(_keyVersion);
 
@@ -93,7 +96,7 @@ class RulesService {
 
     // Si la versión no cambió, no hace falta re-parsear
     if (newVersion == cachedVersion) {
-      final path = _prefs.getString('rules_path');
+      final path = _prefs.getString(_keyRules);
       if (path == null) return _fallbackRules();
       final content = await readRulesFromFile(path);
 
@@ -138,13 +141,20 @@ class RulesService {
         emoji: '🏙️',
         restrictions: {
           VehicleType.particular: VehicleRestriction(
-            schedule: {
-              1: [9, 0],
-              2: [1, 2],
-              3: [3, 4],
-              4: [5, 6],
-              5: [7, 8],
-            },
+            scheduleType: ScheduleType.rotatingWeekly,
+            schedule: {},
+            rotation: RotationRule(
+              cycleStartDate: DateTime(2026, DateTime.january, 5),
+              cycleLength: 5,
+              weekdaysApply: [1, 3],
+              rotationCycle: [
+                [1, 2],
+                [3, 4],
+                [5, 6],
+                [7, 8],
+                [9, 0],
+              ],
+            ),
             morningStart: const TimeOfDay(hour: 6, minute: 0),
             morningEnd: const TimeOfDay(hour: 20, minute: 0),
           ),

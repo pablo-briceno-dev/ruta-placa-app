@@ -54,7 +54,6 @@ class PicoPlacaCalculator {
 
     // Obtener la restricción específica para este tipo de vehículo
     final restriction = cityRule.restrictionFor(vehicleType);
-
     // Este tipo no tiene restricción en esta ciudad
     if (!restriction.hasRestriction) {
       return PicoPlacaResult(
@@ -64,13 +63,15 @@ class PicoPlacaCalculator {
       );
     }
 
-    final lastDigit = _extractLastDigit(plate);
     final restricted = restriction.platesForDay(date);
+    if (restricted.isEmpty) {
+      return const PicoPlacaResult(hasRestriction: false, restrictedPlates: []);
+    }
+    final lastDigit = _extractLastDigit(plate);
     final inTime = time == null || _isInRestrictionTime(restriction, time);
-    final plateRestricted = restricted.contains(lastDigit);
 
     return PicoPlacaResult(
-      hasRestriction: plateRestricted && inTime,
+      hasRestriction: restricted.contains(lastDigit) && inTime,
       restrictedPlates: restricted,
       note: restriction.note,
     );
