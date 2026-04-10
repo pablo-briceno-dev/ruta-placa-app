@@ -1,5 +1,5 @@
 import 'package:go_router/go_router.dart';
-import 'package:ruta_placa/screens/calendary/calendary_screen.dart';
+import 'package:ruta_placa/screens/calendar/calendar_screen.dart';
 import 'package:ruta_placa/screens/home/home_screen.dart';
 import 'package:ruta_placa/screens/route/route_screen.dart';
 import 'package:ruta_placa/screens/settings/settings_screen.dart';
@@ -19,7 +19,7 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/calendar',
           builder: (_, _) =>
-              const InterceptorScreenWidget(child: CalendaryScreen()),
+              const InterceptorScreenWidget(child: CalendarScreen()),
         ),
         GoRoute(
           path: '/route',

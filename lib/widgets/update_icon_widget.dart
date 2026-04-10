@@ -6,7 +6,7 @@ class UpdateIconWidget extends ConsumerStatefulWidget {
   const UpdateIconWidget({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
+  ConsumerState<UpdateIconWidget> createState() =>
       _UpdateIconWidgetState();
 }
 

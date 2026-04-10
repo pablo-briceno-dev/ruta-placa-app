@@ -13,8 +13,7 @@ class FormVehicleScreen extends ConsumerStatefulWidget {
   const FormVehicleScreen({super.key, this.vehicle});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
-      _AddVehicleScreenState();
+  ConsumerState<FormVehicleScreen> createState() => _AddVehicleScreenState();
 }
 
 class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {

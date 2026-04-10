@@ -7,7 +7,7 @@ class CitySelectorSheetWidget extends ConsumerStatefulWidget {
   const CitySelectorSheetWidget({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
+  ConsumerState<CitySelectorSheetWidget> createState() =>
       _CitySelectorSheetWidgetState();
 }
 

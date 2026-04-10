@@ -8,7 +8,7 @@ class VehiclesSelectorSheet extends ConsumerStatefulWidget {
   const VehiclesSelectorSheet({super.key, required this.vehicles});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() =>
+  ConsumerState<VehiclesSelectorSheet> createState() =>
       _VehiclesSelectorSheetState();
 }
 

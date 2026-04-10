@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ruta_placa/models/city_rule.dart';
+import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/widgets/city_selector_sheet_widget.dart';
@@ -16,12 +16,7 @@ class CitySelectorButtonWidget extends ConsumerWidget {
         .cities
         .firstWhere(
           (c) => c.id == selectedCity,
-          orElse: () => CityRule(
-            id: 'Ciudad',
-            name: 'Ciudad',
-            emoji: '',
-            restrictions: {},
-          ),
+          orElse: () => cityRuleDefault,
         );
 
     return InkWell(

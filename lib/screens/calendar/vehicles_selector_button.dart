@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
-import 'package:ruta_placa/screens/calendary/vehicles_selector_sheet.dart';
+import 'package:ruta_placa/screens/calendar/vehicles_selector_sheet.dart';
 
 class VehiclesSelectorButton extends ConsumerWidget {
   final Vehicle? selected;
