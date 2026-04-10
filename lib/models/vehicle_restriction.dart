@@ -27,7 +27,7 @@ class VehicleRestriction {
   });
 
   bool get hasRestriction => schedule.isNotEmpty || rotation != null;
-
+  
   // ---- Metodo principal -----------------------
   // Llamado desde el calculador con contexto de festivo
   PlatesResult platesForDayWithContext({

@@ -59,8 +59,8 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: Text(RulesService.instance.cachedVersion ?? 'Sin datos'),
             trailing: IconButton(
               icon: const Icon(Icons.refresh),
-              // onPressed: () => ref.read(rulesProvider.notifier).refresh(),
-              onPressed: () => testBogota(),
+              onPressed: () => ref.read(rulesProvider.notifier).refresh(),
+              // onPressed: () => testBogota(),
             ),
           ),
         ],

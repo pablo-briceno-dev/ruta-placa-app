@@ -7,6 +7,7 @@ import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/screens/calendar/colors_schedule_panel.dart';
 import 'package:ruta_placa/screens/calendar/day_detail_panel.dart';
 import 'package:ruta_placa/screens/calendar/table_calendar_panel.dart';
 import 'package:ruta_placa/screens/calendar/vehicles_selector_button.dart';
@@ -94,6 +95,8 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
               city: city ?? cityRuleUtils,
               vehicle: selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
             ),
+            const SizedBox(height: 10),
+            ColorsSchedulePanel(),
           ],
         ),
       ),

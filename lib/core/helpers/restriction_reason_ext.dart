@@ -6,13 +6,13 @@ extension RestrictionReasonExt on RestrictionReason {
       case RestrictionReason.normal:
         return 'Día laboral normal';
       case RestrictionReason.holidayAll:
-        return 'Festivo — aplica para todos los dígitos';
+        return 'Festivo — Aplica para todos los dígitos';
       case RestrictionReason.holidaySundayAll:
-        return 'Domingo compensatorio — aplica para todos';
+        return 'Domingo compensatorio — Aplica para todos';
       case RestrictionReason.holidayFriday:
-        return 'Festivo — no aplica';
+        return 'Festivo — No aplica';
       case RestrictionReason.weekend:
-        return 'Fin de semana — no aplica';
+        return 'Fin de semana — No aplica';
       case RestrictionReason.noRule:
         return 'Sin restricción';
     }
