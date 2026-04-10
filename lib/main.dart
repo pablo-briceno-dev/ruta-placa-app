@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/date_symbol_data_local.dart' show initializeDateFormatting;
 import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
 import 'package:ruta_placa/providers/shared_preferences_provider.dart';
@@ -14,6 +15,8 @@ void main() async {
   await RulesService.instance.init();
 
   final prefs = await SharedPreferences.getInstance();
+
+  await initializeDateFormatting('es_ES', null);
 
   runApp(
     ProviderScope(

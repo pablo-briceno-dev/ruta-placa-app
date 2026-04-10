@@ -23,23 +23,9 @@ class CalendarScreen extends ConsumerStatefulWidget {
 
 class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
   DateTime _focused = DateTime.now();
-  DateTime? _selectedDate;
+  DateTime _selectedDate = DateTime.now();
   Vehicle? selectedVehicle;
   bool _checked = false;
-
-  // Color _dayColor(DateTime day, CityRule city, String? plate) {
-  //   if (plate == null || plate.isEmpty) return Colors.transparent;
-  //   final r = PicoPlacaCalculator.checkPlate(
-  //     cityRule: city,
-  //     plate: plate,
-  //     vehicleType: VehicleType.particular,
-  //     date: day,
-  //   );
-  //   if (r.reason != null) return Colors.transparent;
-  //   return r.hasRestriction
-  //       ? Colors.red.withValues(alpha: 0.25)
-  //       : Colors.green.withValues(alpha: 0.2);
-  // }
 
   @override
   void initState() {
@@ -106,6 +92,7 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
                     orElse: () =>
                         CalendarDay(date: day, status: DayStatus.noData),
                   );
+                  // debugPrint('calDays ${calDay.date} ${calDay.status}');
 
                   final color = switch (calDay.status) {
                     DayStatus.restricted => Colors.red,
@@ -138,15 +125,16 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
               ),
               headerStyle: const HeaderStyle(formatButtonVisible: false),
             ),
-            if (_selectedDate != null) ...[
-              const Divider(),
-              _DayDetailPanel(
-                date: _selectedDate!,
-                city: city ?? cityRuleUtils,
-                vehicle:
-                    selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
+            const Divider(),
+            _DayDetailPanel(
+              date: DateTime(
+                _selectedDate.year,
+                _selectedDate.month,
+                _selectedDate.day,
               ),
-            ],
+              city: city ?? cityRuleUtils,
+              vehicle: selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
+            ),
           ],
         ),
       ),
@@ -158,6 +146,7 @@ class _DayDetailPanel extends StatelessWidget {
   final DateTime date;
   final CityRule city;
   final Vehicle vehicle;
+
   const _DayDetailPanel({
     required this.date,
     required this.city,
@@ -173,7 +162,7 @@ class _DayDetailPanel extends StatelessWidget {
       date: date,
     );
     debugPrint(
-      'build _DayDetailPanel ${vehicle.plate} $date ${r.hasRestriction}',
+      'build _DayDetailPanel ${vehicle.plate} $date ${r.restrictedPlates.toString()} ${city.name}',
     );
     return ListTile(
       leading: Icon(

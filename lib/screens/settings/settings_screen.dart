@@ -8,6 +8,7 @@ import 'package:ruta_placa/data/holidays_co.dart' as holidays;
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
+  // !DEBUG - DELETE ME
   void testBogota() {
     final restriction = VehicleRestriction.fromJson({
       "scheduleType": "rotating_alternating",
@@ -43,6 +44,7 @@ class SettingsScreen extends ConsumerWidget {
       debugPrint('$label → ${result.appliesToAll ? "TODOS" : result.plates}');
     });
   }
+  // ! ========================================================================
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

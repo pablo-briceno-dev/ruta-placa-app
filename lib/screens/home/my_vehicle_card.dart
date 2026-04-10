@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle.dart';
@@ -132,16 +133,10 @@ class MyVehicleCard extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // if (resultPlate.reason != null)
-                    //   Text(
-                    //     resultPlate.reason!.toUpperCase(),
-                    //     style: TextStyle(fontWeight: FontWeight.bold),
-                    //   ),
-                    if (resultPlate.note != null)
-                      Text(
-                        resultPlate.note!.toUpperCase(),
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                    Text(
+                      resultPlate.reason.shortMessage.toUpperCase(),
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ],
                 ),
               ),

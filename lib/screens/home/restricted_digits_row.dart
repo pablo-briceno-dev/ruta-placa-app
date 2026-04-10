@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
 import 'package:ruta_placa/core/utils/date_utils.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
@@ -22,8 +24,13 @@ class RestrictedDigitsRow extends ConsumerWidget {
     required this.plate,
   });
 
+  String capitalize(String text) {
+    return text[0].toUpperCase() + text.substring(1);
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final date = DateTime.now();
     final theme = Theme.of(context);
     final vehicle = ref.watch(defaultVehicleProvider);
     final city = ref.watch(cityByIdProvider(cityId));
@@ -31,8 +38,9 @@ class RestrictedDigitsRow extends ConsumerWidget {
       cityRule: city ?? cityRuleUtils,
       plate: vehicle?.plate ?? plate,
       vehicleType: vehicle?.vehicleType ?? vehicleType,
-      date: DateTime.now(),
+      date: date,
     );
+    final formatted = capitalize(DateFormat("EEE d", 'es_ES').format(date));
 
     return Card(
       child: Container(
@@ -44,8 +52,8 @@ class RestrictedDigitsRow extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            const Text(
-              'Dígitos restringidos hoy',
+            Text(
+              'Dígitos restringidos hoy - $formatted',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
@@ -110,16 +118,10 @@ class RestrictedDigitsRow extends ConsumerWidget {
                               .toUpperCase(),
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        // if (resultPlate.reason != null)
-                        //   Text(
-                        //     resultPlate.reason!.toUpperCase(),
-                        //     style: TextStyle(fontWeight: FontWeight.bold),
-                        //   ),
-                        if (resultPlate.note != null)
-                          Text(
-                            resultPlate.note!.toUpperCase(),
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                        Text(
+                          resultPlate.reason.shortMessage.toUpperCase(),
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ],
                     ),
                   ),
