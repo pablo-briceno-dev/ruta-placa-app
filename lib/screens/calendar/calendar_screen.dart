@@ -62,7 +62,7 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
     final calDays = CalendarGenerator.generateMonth(
       year: _focused.year,
       month: _focused.month,
-      cityRule: city ?? cityRuleDefault,
+      cityRule: city ?? cityRuleUtils,
       vehicleType: selectedVehicle?.vehicleType ?? VehicleType.particular,
       plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
     );
@@ -142,7 +142,7 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
               const Divider(),
               _DayDetailPanel(
                 date: _selectedDate!,
-                city: city ?? cityRuleDefault,
+                city: city ?? cityRuleUtils,
                 vehicle:
                     selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
               ),

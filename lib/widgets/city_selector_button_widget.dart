@@ -14,10 +14,7 @@ class CitySelectorButtonWidget extends ConsumerWidget {
     final city = ref
         .watch(rulesProvider)
         .cities
-        .firstWhere(
-          (c) => c.id == selectedCity,
-          orElse: () => cityRuleDefault,
-        );
+        .firstWhere((c) => c.id == selectedCity, orElse: () => cityRuleUtils);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),

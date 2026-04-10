@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:ruta_placa/data/holidays_co.dart' as holidays;
+import 'package:ruta_placa/models/plates_result.dart';
 import 'package:ruta_placa/models/rotation_rule.dart';
 import 'package:ruta_placa/models/schedule_type.dart';
 
 class VehicleRestriction {
   final ScheduleType scheduleType;
-  // Solo para scheduleType = fixedWeekly
-  final Map<int, List<int>> schedule;
-
-  // Solo para rotatingWeekly / rotatingDaily
-  final RotationRule? rotation;
-
+  final Map<int, List<int>> schedule; // Solo para scheduleType = fixedWeekly
+  final RotationRule? rotation; // Solo para rotatingWeekly / rotatingDaily
   final TimeOfDay morningStart;
   final TimeOfDay morningEnd;
   final TimeOfDay? afternoonStart;
   final TimeOfDay? afternoonEnd;
-
-  // Nota informativa para mostrar en UI
-  // Ej: "Solo en corredores viales principales"
-  final String? note;
+  final String?
+  note; // Nota informativa para mostrar en UI Ej: "Solo en corredores viales principales"
 
   const VehicleRestriction({
     required this.scheduleType,
@@ -33,22 +29,41 @@ class VehicleRestriction {
   bool get hasRestriction => schedule.isNotEmpty || rotation != null;
 
   // ---- Metodo principal -----------------------
-  // Devuelve los dígitos restringidos para una fecha dada
-  List<int> platesForDay(DateTime date) {
-    if (!_weekdayApplies(date)) return [];
+  // Llamado desde el calculador con contexto de festivo
+  PlatesResult platesForDayWithContext({
+    required DateTime date,
+    required bool isHoliday,
+  }) {
     switch (scheduleType) {
       case ScheduleType.fixedWeekly:
-        return schedule[date.weekday] ?? [];
+        if (!_weekdayApplies(date)) return PlatesResult.empty();
+        return PlatesResult(plates: schedule[date.weekday] ?? []);
 
       case ScheduleType.rotatingWeekly:
-        return _rotatingWeeklyPlates(date);
+        if (!_weekdayApplies(date)) return PlatesResult.empty();
+        return PlatesResult(plates: _rotatingWeeklyPlates(date));
 
       case ScheduleType.rotatingDaily:
-        return _rotatingDailyPlates(date);
+        if (!_weekdayApplies(date)) return PlatesResult.empty();
+        return PlatesResult(plates: _rotatingDailyPlates(date));
 
       case ScheduleType.rotatingWeeklyDaily:
-        return _rotatingWeeklyDailyPlates(date);
+        if (!_weekdayApplies(date)) return PlatesResult.empty();
+        final idx = _rotatingWeeklyDailyIndex(date);
+        // return _rotatingWeeklyDailyPlates(date);
+        return PlatesResult(plates: rotation!.rotationCycle[idx]);
+
+      case ScheduleType.rotatingAlternating:
+        return _alternatingResult(date: date, isHoliday: isHoliday);
     }
+  }
+
+  // Devuelve los dígitos restringidos para una fecha dada
+  List<int> platesForDay(DateTime date) {
+    return platesForDayWithContext(
+      date: date,
+      isHoliday: holidays.isHoliday(date),
+    ).plates;
   }
 
   // ----- Rotación semanal -----------------
@@ -87,26 +102,81 @@ class VehicleRestriction {
     return rotation!.rotationCycle[cycleIndex];
   }
 
-  List<int> _rotatingWeeklyDailyPlates(DateTime date) {
-    if (rotation == null) return [];
-
+  // --- rotating_weekly_daily -----------------
+  int _rotatingWeeklyDailyIndex(DateTime date) {
+    if (rotation == null) return 0;
     final startMonday = _mondayOf(rotation!.cycleStartDate);
     final dateMonday = _mondayOf(date);
     final weeksDiff = dateMonday.difference(startMonday).inDays ~/ 7;
-    if (weeksDiff < 0) return [];
-
+    if (weeksDiff < 0) return 0;
     final daysFromMonday = rotation!.weekdaysApply
         .where((wd) => wd < date.weekday)
         .length;
-
     // El lunes de la semana N empieza en índice N (no N*5)
     // Dentro de la semana avanza día a día
-    final finalIndex =
-        (weeksDiff + daysFromMonday) % rotation!.rotationCycle.length;
-
-    return rotation!.rotationCycle[finalIndex];
+    return (weeksDiff + daysFromMonday) % rotation!.rotationCycle.length;
   }
 
+  // ----- rotating_alternating (Bogota) -----------------
+  PlatesResult _alternatingResult({
+    required DateTime date,
+    required bool isHoliday,
+  }) {
+    if (rotation == null) return PlatesResult.empty();
+    final weekday = date.weekday;
+    // Sabado normal -> no aplica
+    if (weekday == DateTime.saturday) return PlatesResult.empty();
+    // Domingo -> solo aplica si el viernes de esa semana fue festivo
+    if (weekday == DateTime.sunday) {
+      final fridayOfWeek = date.subtract(const Duration(days: 2));
+      final fridayWasHoliday = holidays.isHoliday(fridayOfWeek);
+      return fridayWasHoliday ? PlatesResult.all() : PlatesResult.empty();
+    }
+    // Festivo viernes -> no aplica pico (el domingo sí, pero eso se
+    // maneja en el caso domingo de arriba)
+    if (isHoliday && weekday == DateTime.friday) {
+      return PlatesResult.empty();
+    }
+    // Festivo lunes-jueves -> aplica para TODOS, NO avanza el ciclo
+    if (isHoliday) return PlatesResult.all();
+    // Dia laboral normal -> calcular índice alternante
+    final index = _alternatingIndex(date);
+    return PlatesResult(plates: rotation!.rotationCycle[index]);
+  }
+
+  // Cuenta días laborales normales (sin festivos) desde cyclesStartDate
+  // Los festivos NO avanzan el índice
+  int _alternatingIndex(DateTime date) {
+    if (rotation == null) return 0;
+    int laboralCount = 0;
+    DateTime cursor = rotation!.cycleStartDate;
+    while (!_isSameDay(cursor, date)) {
+      if (cursor.isAfter(date)) break;
+      final isWeekday = cursor.weekday <= DateTime.friday;
+      final cursorIsHoliday = holidays.isHoliday(cursor);
+
+      if (isWeekday && !cursorIsHoliday) {
+        laboralCount++;
+        debugPrint(
+          '  cuenta: ${cursor.day}/${cursor.month} '
+          '(weekday ${cursor.weekday}) → laboralCount=$laboralCount',
+        );
+      } else {
+        debugPrint(
+          '  salta:  ${cursor.day}/${cursor.month} '
+          '(weekday ${cursor.weekday}, festivo=$cursorIsHoliday)',
+        );
+      }
+
+      cursor = cursor.add(const Duration(days: 1));
+    }
+
+    final index = laboralCount % rotation!.rotationCycle.length;
+    debugPrint('  TOTAL laboralCount=$laboralCount → index=$index');
+    return index;
+  }
+
+  // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
       case ScheduleType.fixedWeekly:
@@ -114,6 +184,7 @@ class VehicleRestriction {
       case ScheduleType.rotatingWeekly:
       case ScheduleType.rotatingDaily:
       case ScheduleType.rotatingWeeklyDaily:
+      case ScheduleType.rotatingAlternating:
         // Para rotación: aplica si el weekday está en weekdaysApply
         if (rotation == null) return false;
         return rotation!.weekdaysApply.contains(date.weekday);
@@ -135,6 +206,7 @@ class VehicleRestriction {
       'rotating_weekly' => ScheduleType.rotatingWeekly,
       'rotating_daily' => ScheduleType.rotatingDaily,
       'rotating_weekly_daily' => ScheduleType.rotatingWeeklyDaily,
+      'rotating_alternating' => ScheduleType.rotatingAlternating,
       _ => ScheduleType.fixedWeekly,
     };
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
@@ -42,7 +43,7 @@ class MyVehicleCard extends ConsumerWidget {
       cityByIdProvider(selectedCity ?? vehicle.cityId),
     );
     final resultPlate = PicoPlacaCalculator.checkPlate(
-      cityRule: cityRule,
+      cityRule: cityRule ?? cityRuleUtils,
       plate: vehicle.plate,
       vehicleType: vehicle.vehicleType,
       date: DateTime.now(),
@@ -131,11 +132,11 @@ class MyVehicleCard extends ConsumerWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (resultPlate.reason != null)
-                      Text(
-                        resultPlate.reason!.toUpperCase(),
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
+                    // if (resultPlate.reason != null)
+                    //   Text(
+                    //     resultPlate.reason!.toUpperCase(),
+                    //     style: TextStyle(fontWeight: FontWeight.bold),
+                    //   ),
                     if (resultPlate.note != null)
                       Text(
                         resultPlate.note!.toUpperCase(),

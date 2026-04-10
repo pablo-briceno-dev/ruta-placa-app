@@ -6,7 +6,7 @@ import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_restriction.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
-final cityRuleDefault = CityRule(
+final cityRuleUtils = CityRule(
   id: 'default',
   name: 'Ciudad Por Defecto',
   emoji: '🏙️',
@@ -32,4 +32,8 @@ final cityRuleDefault = CityRule(
   },
 );
 
-final vehicleDefaultUtils = Vehicle(plate: '', alias: 'Vehiculo', cityId: 'default');
+final vehicleDefaultUtils = Vehicle(
+  plate: '',
+  alias: 'Vehiculo',
+  cityId: 'default',
+);

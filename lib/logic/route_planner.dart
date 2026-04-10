@@ -1,4 +1,5 @@
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
+import 'package:ruta_placa/models/pico_placa_result.dart';
 import 'package:ruta_placa/models/route_stop.dart';
 
 class StopResult {

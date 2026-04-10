@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/utils/date_utils.dart';
+import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
@@ -27,7 +28,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
     final vehicle = ref.watch(defaultVehicleProvider);
     final city = ref.watch(cityByIdProvider(cityId));
     final resultPlate = PicoPlacaCalculator.checkPlate(
-      cityRule: city,
+      cityRule: city ?? cityRuleUtils,
       plate: vehicle?.plate ?? plate,
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: DateTime.now(),
@@ -59,7 +60,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
                 children: List.generate(_allPlates.length, (index) {
                   final digit = _allPlates[index];
                   final result = PicoPlacaCalculator.checkPlate(
-                    cityRule: city,
+                    cityRule: city ?? cityRuleUtils,
                     plate: digit,
                     vehicleType: vehicleType, // ← automático desde el modelo
                     date: DateTime.now(),
@@ -109,11 +110,11 @@ class RestrictedDigitsRow extends ConsumerWidget {
                               .toUpperCase(),
                           style: TextStyle(fontWeight: FontWeight.bold),
                         ),
-                        if (resultPlate.reason != null)
-                          Text(
-                            resultPlate.reason!.toUpperCase(),
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
+                        // if (resultPlate.reason != null)
+                        //   Text(
+                        //     resultPlate.reason!.toUpperCase(),
+                        //     style: TextStyle(fontWeight: FontWeight.bold),
+                        //   ),
                         if (resultPlate.note != null)
                           Text(
                             resultPlate.note!.toUpperCase(),
