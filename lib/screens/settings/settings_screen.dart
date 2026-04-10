@@ -25,15 +25,17 @@ class SettingsScreen extends ConsumerWidget {
     });
 
     final fechas = {
-      // 'Mié  8 abr → [1,2,3,4,5]': DateTime(2026, 4, 8),
-      // 'Jue  9 abr → [6,7,8,9,0]': DateTime(2026, 4, 9), // ✅ confirmado
-      // 'Vie 10 abr → [1,2,3,4,5]': DateTime(2026, 4, 10),
-      // 'Lun 13 abr → [6,7,8,9,0]': DateTime(2026, 4, 13),
-      // 'Mar 14 abr → [1,2,3,4,5]': DateTime(2026, 4, 14),
-      // // 1 mayo = festivo jueves → todos los dígitos
-      // 'Vie  1 may → NINGUNO': DateTime(2026, 5, 1),
-      // 'Dom  3 may → TODOS': DateTime(2026, 5, 3),
-      'Lun  4 may → [1,2,3,4,5]': DateTime(2026, 5, 4),
+      'Mié  8 abr → [1,2,3,4,5]': DateTime(2026, 4, 8),
+      'Jue  9 abr → [6,7,8,9,0]': DateTime(2026, 4, 9),
+      'Vie 10 abr → [1,2,3,4,5]': DateTime(2026, 4, 10),
+      'Lun 13 abr → [6,7,8,9,0]': DateTime(2026, 4, 13),
+      'Mar 14 abr → [1,2,3,4,5]': DateTime(2026, 4, 14),
+      'Jue 30 abr → [1,2,3,4,5]': DateTime(2026, 4, 30),
+      'Vie  1 may → NINGUNO': DateTime(2026, 5, 1),
+      'Dom  3 may → TODOS': DateTime(2026, 5, 3),
+      'Lun  4 may → [1,2,3,4,5]': DateTime(2026, 5, 4), // ← el que fallaba
+      'Mar  5 may → [6,7,8,9,0]': DateTime(2026, 5, 5),
+      'Mié  6 may → [1,2,3,4,5]': DateTime(2026, 5, 6),
     };
 
     fechas.forEach((label, date) {

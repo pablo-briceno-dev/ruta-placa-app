@@ -148,32 +148,32 @@ class VehicleRestriction {
   // Los festivos NO avanzan el índice
   int _alternatingIndex(DateTime date) {
     if (rotation == null) return 0;
+    if (_isSameDay(rotation!.cycleStartDate, date)) return 0;
+
     int laboralCount = 0;
-    DateTime cursor = rotation!.cycleStartDate;
-    while (!_isSameDay(cursor, date)) {
-      if (cursor.isAfter(date)) break;
+    DateTime cursor = rotation!.cycleStartDate.add(const Duration(days: 1));
+
+    // Incluir 'date' en el loop para tratarlo igual que los demás días
+    while (!cursor.isAfter(date)) {
       final isWeekday = cursor.weekday <= DateTime.friday;
       final cursorIsHoliday = holidays.isHoliday(cursor);
 
       if (isWeekday && !cursorIsHoliday) {
-        laboralCount++;
-        debugPrint(
-          '  cuenta: ${cursor.day}/${cursor.month} '
-          '(weekday ${cursor.weekday}) → laboralCount=$laboralCount',
-        );
-      } else {
-        debugPrint(
-          '  salta:  ${cursor.day}/${cursor.month} '
-          '(weekday ${cursor.weekday}, festivo=$cursorIsHoliday)',
-        );
+        // Si es lunes y el viernes anterior fue festivo → no avanza
+        if (cursor.weekday == DateTime.monday) {
+          final fridayBefore = cursor.subtract(const Duration(days: 3));
+          final fridayBeforeHoliday = holidays.isHoliday(fridayBefore);
+          if (!fridayBeforeHoliday) laboralCount++;
+          // Si el viernes fue festivo, no sumamos → el índice se mantiene
+        } else {
+          laboralCount++;
+        }
       }
 
       cursor = cursor.add(const Duration(days: 1));
     }
 
-    final index = laboralCount % rotation!.rotationCycle.length;
-    debugPrint('  TOTAL laboralCount=$laboralCount → index=$index');
-    return index;
+    return laboralCount % rotation!.rotationCycle.length;
   }
 
   // ----- Helpers -----------------
