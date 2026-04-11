@@ -40,7 +40,7 @@ class VehiclesSelectorButton extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.directions_car, size: 20),
+            vehicle.getIcon(vehicleType: vehicle.vehicleType),
             const SizedBox(width: 6),
             Text(
               '${vehicle.alias} (${vehicle.plate})',

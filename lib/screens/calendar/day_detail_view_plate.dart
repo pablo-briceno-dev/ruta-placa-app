@@ -21,9 +21,9 @@ class DayDetailViewPlate extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            // color: colorPlate,
-            borderRadius: BorderRadius.circular(10),
+            color: colorPlate.withValues(alpha: 0.15),
             border: Border.all(color: colorPlate, width: 1.5),
+            borderRadius: BorderRadiusGeometry.circular(10),
           ),
           child: Text(
             plates.join(' - '),

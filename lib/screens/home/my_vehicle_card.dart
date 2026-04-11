@@ -4,7 +4,6 @@ import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle.dart';
-import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
@@ -19,21 +18,6 @@ class MyVehicleCard extends ConsumerWidget {
     required this.vehicle,
     this.isDefault = false,
   });
-
-  Icon _getIcon(VehicleType vehicleType, ThemeData theme, Color color) {
-    switch (vehicleType) {
-      case VehicleType.particular:
-        return Icon(Icons.directions_car, color: color);
-      case VehicleType.taxi:
-        return Icon(Icons.local_taxi, color: color);
-      case VehicleType.moto:
-        return Icon(Icons.two_wheeler, color: color);
-      case VehicleType.camion:
-        return Icon(Icons.local_shipping, color: color);
-      case VehicleType.bus:
-        return Icon(Icons.directions_bus, color: color);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -75,10 +59,9 @@ class MyVehicleCard extends ConsumerWidget {
                   color: Colors.blue.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
-                child: _getIcon(
-                  vehicle.vehicleType,
-                  theme,
-                  resultPlate.hasRestriction
+                child: vehicle.getIcon(
+                  vehicleType: vehicle.vehicleType,
+                  color: resultPlate.hasRestriction
                       ? theme.colorScheme.error
                       : theme.colorScheme.primary,
                 ),

@@ -66,7 +66,7 @@ class PicoPlacaCalculator {
       return const PicoPlacaResult(
         hasRestriction: false,
         restrictedPlates: [],
-        reason: RestrictionReason.holidayFriday,
+        reason: RestrictionReason.holiday,
       );
     }
 
@@ -85,7 +85,7 @@ class PicoPlacaCalculator {
       return const PicoPlacaResult(
         hasRestriction: false,
         restrictedPlates: [],
-        reason: RestrictionReason.holidayFriday,
+        reason: RestrictionReason.holiday,
       );
     }
 

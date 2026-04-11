@@ -9,7 +9,7 @@ extension RestrictionReasonExt on RestrictionReason {
         return 'Festivo — Aplica para todos los dígitos';
       case RestrictionReason.holidaySundayAll:
         return 'Domingo compensatorio — Aplica para todos';
-      case RestrictionReason.holidayFriday:
+      case RestrictionReason.holiday:
         return 'Festivo — No aplica';
       case RestrictionReason.weekend:
         return 'Fin de semana — No aplica';

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
 class Vehicle {
@@ -17,6 +18,21 @@ class Vehicle {
 
   set vehicleType(VehicleType t) => vehicleTypeIndex = t.index;
 
+  Icon getIcon({required VehicleType vehicleType, Color? color}) {
+    switch (vehicleType) {
+      case VehicleType.particular:
+        return Icon(Icons.directions_car, color: color);
+      case VehicleType.taxi:
+        return Icon(Icons.local_taxi, color: color);
+      case VehicleType.moto:
+        return Icon(Icons.two_wheeler, color: color);
+      case VehicleType.camion:
+        return Icon(Icons.local_shipping, color: color);
+      case VehicleType.bus:
+        return Icon(Icons.directions_bus, color: color);
+    }
+  }
+
   Map<String, dynamic> toJson() => {
     'plate': plate,
     'vehicleTypeIndex': vehicleTypeIndex,
@@ -31,8 +47,8 @@ class Vehicle {
   );
 
   int get lastDigit {
-    final digits = plate.replaceAll(RegExp(r'[^0-9]'), '');
-    if (digits.isEmpty) return -1;
-    return int.parse(digits[digits.length - 1]);
+    final clean = plate.replaceAll(RegExp(r'[^0-9]'), '');
+    if (clean.isEmpty) return -1;
+    return int.parse(clean[clean.length - 1]);
   }
 }

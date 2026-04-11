@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/calendar_generator.dart';
+import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
@@ -26,6 +27,7 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
   DateTime _selectedDate = DateTime.now();
   Vehicle? selectedVehicle;
   bool _checked = false;
+  bool _colorsScheduleEnabled = true;
 
   @override
   void initState() {
@@ -45,12 +47,31 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
     final defaultVehicle = ref.watch(defaultVehicleProvider);
     final selectedCity = ref.watch(selectedCityProvider);
     final city = ref.watch(cityByIdProvider(selectedCity ?? 'bogota'));
+    final vehicle = Vehicle(
+      plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
+      alias: selectedVehicle?.alias ?? defaultVehicle?.alias ?? 'Test',
+      cityId: city?.id ?? cityRuleUtils.id,
+    );
+    final vehiclePlates =
+        city
+            ?.restrictions[selectedVehicle?.vehicleType ??
+                VehicleType.particular]
+            ?.getPlates() ??
+        cityRuleUtils.restrictions[VehicleType.particular]?.getPlates() ??
+        [];
     final calDays = CalendarGenerator.generateMonth(
       year: _focused.year,
       month: _focused.month,
       cityRule: city ?? cityRuleUtils,
       vehicleType: selectedVehicle?.vehicleType ?? VehicleType.particular,
       plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
+      isSystemColors: _colorsScheduleEnabled,
+    );
+    final restricted = PicoPlacaCalculator.checkPlate(
+      cityRule: city ?? cityRuleUtils,
+      plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
+      vehicleType: selectedVehicle?.vehicleType ?? VehicleType.particular,
+      date: DateTime.now(),
     );
 
     return Scaffold(
@@ -94,9 +115,18 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
               ),
               city: city ?? cityRuleUtils,
               vehicle: selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
+              plates: vehiclePlates,
+              isSytemColors: _colorsScheduleEnabled,
             ),
             const SizedBox(height: 10),
-            ColorsSchedulePanel(),
+            ColorsSchedulePanel(
+              plates: vehiclePlates,
+              platesRestriction: restricted.restrictedPlates,
+              lastDigitPlate: '${vehicle.lastDigit}',
+              isEnabledSystemColors: _colorsScheduleEnabled,
+              onChangedSwitch: (v) =>
+                  setState(() => _colorsScheduleEnabled = v),
+            ),
           ],
         ),
       ),

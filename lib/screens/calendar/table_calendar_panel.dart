@@ -44,12 +44,9 @@ class TableCalendarPanel extends StatelessWidget {
               orElse: () => CalendarDay(date: day, status: DayStatus.noData),
             );
 
-            final color = switch (calDay.status) {
-              DayStatus.restricted => Colors.red,
-              DayStatus.holiday => Colors.orange,
-              DayStatus.weekend => Colors.transparent,
-              _ => Colors.transparent,
-            };
+            final color = calDay.color;
+            if (calDay.status == DayStatus.holiday)
+              debugPrint('color ${color.toARGB32()}');
 
             return Container(
               margin: const EdgeInsets.all(4),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
 import 'package:ruta_placa/core/utils/date_utils.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
+import 'package:ruta_placa/core/utils/strings_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
@@ -24,10 +25,6 @@ class RestrictedDigitsRow extends ConsumerWidget {
     required this.plate,
   });
 
-  String capitalize(String text) {
-    return text[0].toUpperCase() + text.substring(1);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final date = DateTime.now();
@@ -40,7 +37,9 @@ class RestrictedDigitsRow extends ConsumerWidget {
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: date,
     );
-    final formatted = capitalize(DateFormat("EEE d", 'es_ES').format(date));
+    final formatted = capitalizeString(
+      DateFormat("EEE d", 'es_ES').format(date),
+    );
 
     return Card(
       child: Container(

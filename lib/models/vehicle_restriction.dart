@@ -27,7 +27,13 @@ class VehicleRestriction {
   });
 
   bool get hasRestriction => schedule.isNotEmpty || rotation != null;
-  
+
+  List<List<int>> getPlates() {
+    if (schedule.isNotEmpty) return schedule.values.toList();
+    if (rotation != null) return rotation!.rotationCycle;
+    return [];
+  }
+
   // ---- Metodo principal -----------------------
   // Llamado desde el calculador con contexto de festivo
   PlatesResult platesForDayWithContext({

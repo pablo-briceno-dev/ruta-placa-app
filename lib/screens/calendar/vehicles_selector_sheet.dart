@@ -61,7 +61,7 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
                   final vehicle = filtered[index];
 
                   return ListTile(
-                    leading: const Icon(Icons.directions_car),
+                    leading: vehicle.getIcon(vehicleType: vehicle.vehicleType),
                     title: Text(vehicle.alias),
                     subtitle: Text(vehicle.plate),
                     onTap: () {
