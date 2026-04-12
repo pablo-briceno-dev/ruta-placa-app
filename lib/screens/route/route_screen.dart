@@ -6,7 +6,7 @@ class RouteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Ruta')),
+      appBar: AppBar(title: const Text('Planear Ruta')),
       body: const Center(child: Text('Ruta')),
     );
   }
