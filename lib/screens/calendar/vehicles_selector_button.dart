@@ -18,7 +18,10 @@ class VehiclesSelectorButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final defaultVehicle = ref.watch(defaultVehicleProvider);
     final vehicles = ref.watch(vehiclesProvider);
-    final vehicle = selected ?? defaultVehicle ?? vehicles.values.first;
+    final vehicle =
+        selected ??
+        defaultVehicle ??
+        (vehicles.isNotEmpty ? vehicles.values.first : null);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -40,12 +43,15 @@ class VehiclesSelectorButton extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            vehicle.getIcon(vehicleType: vehicle.vehicleType),
-            const SizedBox(width: 6),
-            Text(
-              '${vehicle.alias} (${vehicle.plate})',
-              style: const TextStyle(fontSize: 14),
-            ),
+            if (vehicle != null) ...[
+              vehicle.getIcon(vehicleType: vehicle.vehicleType),
+              const SizedBox(width: 6),
+              Text('${vehicle.alias} (${vehicle.plate})'),
+            ] else ...[
+              const Icon(Icons.directions_car),
+              const SizedBox(width: 6),
+              const Text('Consultar vehículo'),
+            ],
             const SizedBox(width: 4),
             const Icon(Icons.keyboard_arrow_down, size: 18),
           ],

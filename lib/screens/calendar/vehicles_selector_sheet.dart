@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/models/vehicle.dart';
+import 'package:ruta_placa/models/vehicle_type.dart';
+import 'package:ruta_placa/providers/cities_provider.dart';
+import 'package:ruta_placa/providers/rules_provider.dart';
 
 class VehiclesSelectorSheet extends ConsumerStatefulWidget {
   final List<Vehicle> vehicles;
@@ -15,6 +19,9 @@ class VehiclesSelectorSheet extends ConsumerStatefulWidget {
 class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
   final _searchController = TextEditingController();
   String query = '';
+  final _plateController = TextEditingController();
+  VehicleType vehicleType = VehicleType.particular;
+  String? plateError;
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +32,12 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
               v.plate.toLowerCase().contains(query.toLowerCase()),
         )
         .toList();
+    final selectedCity = ref.watch(selectedCityProvider);
+    final city = ref.watch(cityByIdProvider(selectedCity ?? 'bogota'));
+    final plateRegex = RegExp(
+      r'^[A-Z]{3}-?\d{2}[A-Z0-9]$',
+      caseSensitive: false,
+    );
 
     return Padding(
       padding: EdgeInsets.only(
@@ -36,39 +49,134 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
           children: [
             const SizedBox(height: 10),
 
-            // 🔍 SEARCH
+            if (filtered.isNotEmpty) ...[
+              // 🔍 SEARCH
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: const InputDecoration(
+                    hintText: 'Buscar vehículo...',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (value) {
+                    setState(() => query = value);
+                  },
+                ),
+              ),
+
+              // 📋 LISTA
+              SizedBox(
+                height: 300,
+                child: ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (_, index) {
+                    final vehicle = filtered[index];
+
+                    return ListTile(
+                      leading: vehicle.getIcon(
+                        vehicleType: vehicle.vehicleType,
+                      ),
+                      title: Text(vehicle.alias),
+                      subtitle: Text(vehicle.plate),
+                      onTap: () {
+                        Navigator.pop(context, vehicle);
+                      },
+                    );
+                  },
+                ),
+              ),
+              const Divider(),
+            ],
+
+            // ➕ FORMULARIO (siempre visible o solo si vacío)
             Padding(
               padding: const EdgeInsets.all(16),
-              child: TextField(
-                controller: _searchController,
-                decoration: const InputDecoration(
-                  hintText: 'Buscar vehículo...',
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  setState(() => query = value);
-                },
-              ),
-            ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Consultar vehículo',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
 
-            // 📋 LISTA
-            SizedBox(
-              height: 300,
-              child: ListView.builder(
-                itemCount: filtered.length,
-                itemBuilder: (_, index) {
-                  final vehicle = filtered[index];
+                  TextField(
+                    controller: _plateController,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      labelText: 'Placa',
+                      border: const OutlineInputBorder(),
+                      errorText: plateError,
+                    ),
+                    onChanged: (value) {
+                      final upper = value.toUpperCase();
 
-                  return ListTile(
-                    leading: vehicle.getIcon(vehicleType: vehicle.vehicleType),
-                    title: Text(vehicle.alias),
-                    subtitle: Text(vehicle.plate),
-                    onTap: () {
-                      Navigator.pop(context, vehicle);
+                      // 🔠 Forzar mayúsculas
+                      _plateController.value = _plateController.value.copyWith(
+                        text: upper,
+                        selection: TextSelection.collapsed(
+                          offset: upper.length,
+                        ),
+                      );
+
+                      // ✅ Validación en tiempo real
+                      if (upper.isEmpty) {
+                        setState(() => plateError = null);
+                        return;
+                      }
+
+                      if (!plateRegex.hasMatch(upper)) {
+                        setState(
+                          () => plateError =
+                              'Formato inválido (Ej: ABC123 o ABC-123)',
+                        );
+                      } else {
+                        setState(() => plateError = null);
+                      }
                     },
-                  );
-                },
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  DropdownButtonFormField<VehicleType>(
+                    initialValue: vehicleType,
+                    items: VehicleType.values.map((type) {
+                      return DropdownMenuItem(
+                        value: type,
+                        child: Text('${type.icon} ${type.label}'),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      setState(() => vehicleType = value!);
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo de vehículo',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      final plate = _plateController.text.trim();
+
+                      if (plate.isEmpty) return;
+
+                      final newVehicle = Vehicle(
+                        plate: plate,
+                        alias: 'Consultando: $plate',
+                        vehicleTypeIndex: vehicleType.index,
+                        cityId: city?.id ?? cityRuleUtils.id,
+                      );
+
+                      Navigator.pop(context, newVehicle);
+                    },
+                    icon: const Icon(Icons.directions_car),
+                    label: const Text('Consultar'),
+                  ),
+                ],
               ),
             ),
           ],

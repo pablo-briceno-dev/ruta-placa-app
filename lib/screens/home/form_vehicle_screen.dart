@@ -73,7 +73,10 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                       return 'Ingresa una placa';
                     }
 
-                    final regex = RegExp(r'^[A-Z]{3}-?\d{2}[A-Z0-9]$');
+                    final regex = RegExp(
+                      r'^[A-Z]{3}-?\d{2}[A-Z0-9]$',
+                      caseSensitive: false,
+                    );
                     if (!regex.hasMatch(value)) {
                       return 'Formato inválido (ABC-123 o ABC-12A)';
                     }

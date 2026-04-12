@@ -35,8 +35,9 @@ class DayDetailPanel extends StatelessWidget {
       date: date,
     );
     final indexColor = findIndexList(plates, r.restrictedPlates);
-    // !Corregir esta parte
-    final color = colorsPlates[indexColor];
+    final color = indexColor != -1
+        ? colorsPlates[indexColor]
+        : Colors.transparent;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),

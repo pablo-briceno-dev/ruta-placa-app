@@ -23,6 +23,11 @@ class TableCalendarPanel extends StatelessWidget {
     final theme = Theme.of(context);
     final dateNow = DateTime.now();
 
+    final firstAllowedMonth = DateTime(dateNow.year, dateNow.month);
+    final lastAllowedMonth = DateTime(dateNow.year, dateNow.month + 3);
+    final isLeftDisabled = isBeforeOrSameMonth(focused, firstAllowedMonth);
+    final isRightDisabled = isAfterOrSameMonth(focused, lastAllowedMonth);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
@@ -45,8 +50,6 @@ class TableCalendarPanel extends StatelessWidget {
             );
 
             final color = calDay.color;
-            if (calDay.status == DayStatus.holiday)
-              debugPrint('color ${color.toARGB32()}');
 
             return Container(
               margin: const EdgeInsets.all(4),
@@ -70,8 +73,36 @@ class TableCalendarPanel extends StatelessWidget {
             );
           },
         ),
-        headerStyle: const HeaderStyle(formatButtonVisible: false),
+        headerStyle: HeaderStyle(
+          formatButtonVisible: false,
+
+          leftChevronIcon: Icon(
+            Icons.chevron_left,
+            color: isLeftDisabled
+                ? theme.colorScheme.inverseSurface.withValues(alpha: 0.5)
+                : theme.colorScheme.inverseSurface,
+          ),
+
+          rightChevronIcon: Icon(
+            Icons.chevron_right,
+            color: isRightDisabled
+                ? theme.colorScheme.inverseSurface.withValues(alpha: 0.5)
+                : theme.colorScheme.inverseSurface,
+          ),
+        ),
       ),
     );
+  }
+
+  bool isSameMonth(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month;
+  }
+
+  bool isBeforeOrSameMonth(DateTime a, DateTime b) {
+    return a.year < b.year || (a.year == b.year && a.month <= b.month);
+  }
+
+  bool isAfterOrSameMonth(DateTime a, DateTime b) {
+    return a.year > b.year || (a.year == b.year && a.month >= b.month);
   }
 }
