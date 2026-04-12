@@ -18,16 +18,20 @@ class DayDetailViewPlate extends StatelessWidget {
       children: [
         Text(textContent),
         const SizedBox(width: 15),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(
-            color: colorPlate.withValues(alpha: 0.15),
-            border: Border.all(color: colorPlate, width: 1.5),
-            borderRadius: BorderRadiusGeometry.circular(10),
-          ),
-          child: Text(
-            plates.join(' - '),
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: colorPlate.withValues(alpha: 0.15),
+              border: Border.all(color: colorPlate, width: 1.5),
+              borderRadius: BorderRadiusGeometry.circular(10),
+            ),
+            child: Text(
+              plates.join(' - '),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+              maxLines: 2,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       ],

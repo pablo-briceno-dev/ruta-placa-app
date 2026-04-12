@@ -83,51 +83,54 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
           CitySelectorButtonWidget(),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Center(
-              child: VehiclesSelectorButton(
-                selected: selectedVehicle,
-                onSelected: (vehicle) {
-                  setState(() => selectedVehicle = vehicle);
-                },
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            children: [
+              Center(
+                child: VehiclesSelectorButton(
+                  selected: selectedVehicle,
+                  onSelected: (vehicle) {
+                    setState(() => selectedVehicle = vehicle);
+                  },
+                ),
               ),
-            ),
-            const SizedBox(height: 5),
-            TableCalendarPanel(
-              calDays: calDays,
-              focused: _focused,
-              selectedDate: _selectedDate,
-              onDaySelected: (sel, foc) => setState(() {
-                _selectedDate = sel;
-                _focused = foc;
-              }),
-              onPageChanged: (p0) => setState(() => _focused = p0),
-            ),
-            const Divider(),
-            DayDetailPanel(
-              date: DateTime(
-                _selectedDate.year,
-                _selectedDate.month,
-                _selectedDate.day,
+              const SizedBox(height: 5),
+              TableCalendarPanel(
+                calDays: calDays,
+                focused: _focused,
+                selectedDate: _selectedDate,
+                onDaySelected: (sel, foc) => setState(() {
+                  _selectedDate = sel;
+                  _focused = foc;
+                }),
+                onPageChanged: (p0) => setState(() => _focused = p0),
               ),
-              city: city ?? cityRuleUtils,
-              vehicle: selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
-              plates: vehiclePlates,
-              isSytemColors: _colorsScheduleEnabled,
-            ),
-            const SizedBox(height: 10),
-            ColorsSchedulePanel(
-              plates: vehiclePlates,
-              platesRestriction: restricted.restrictedPlates,
-              lastDigitPlate: '${vehicle.lastDigit}',
-              isEnabledSystemColors: _colorsScheduleEnabled,
-              onChangedSwitch: (v) =>
-                  setState(() => _colorsScheduleEnabled = v),
-            ),
-          ],
+              const Divider(),
+              DayDetailPanel(
+                date: DateTime(
+                  _selectedDate.year,
+                  _selectedDate.month,
+                  _selectedDate.day,
+                ),
+                city: city ?? cityRuleUtils,
+                vehicle:
+                    selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
+                plates: vehiclePlates,
+                isSytemColors: _colorsScheduleEnabled,
+              ),
+              const SizedBox(height: 10),
+              ColorsSchedulePanel(
+                plates: vehiclePlates,
+                platesRestriction: restricted.restrictedPlates,
+                lastDigitPlate: '${vehicle.lastDigit}',
+                isEnabledSystemColors: _colorsScheduleEnabled,
+                onChangedSwitch: (v) =>
+                    setState(() => _colorsScheduleEnabled = v),
+              ),
+            ],
+          ),
         ),
       ),
     );
