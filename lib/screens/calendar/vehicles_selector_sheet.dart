@@ -87,98 +87,101 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
                   },
                 ),
               ),
-              const Divider(),
             ],
 
-            // ➕ FORMULARIO (siempre visible o solo si vacío)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  const Text(
-                    'Consultar vehículo',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 10),
-
-                  TextField(
-                    controller: _plateController,
-                    textCapitalization: TextCapitalization.characters,
-                    decoration: InputDecoration(
-                      labelText: 'Placa',
-                      border: const OutlineInputBorder(),
-                      errorText: plateError,
+            if (query.isEmpty) ...[
+              const Divider(),
+              // ➕ FORMULARIO (siempre visible o solo si vacío)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Consultar vehículo',
+                      style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    onChanged: (value) {
-                      final upper = value.toUpperCase();
+                    const SizedBox(height: 10),
 
-                      // 🔠 Forzar mayúsculas
-                      _plateController.value = _plateController.value.copyWith(
-                        text: upper,
-                        selection: TextSelection.collapsed(
-                          offset: upper.length,
-                        ),
-                      );
+                    TextField(
+                      controller: _plateController,
+                      textCapitalization: TextCapitalization.characters,
+                      decoration: InputDecoration(
+                        labelText: 'Placa',
+                        border: const OutlineInputBorder(),
+                        errorText: plateError,
+                      ),
+                      onChanged: (value) {
+                        final upper = value.toUpperCase();
 
-                      // ✅ Validación en tiempo real
-                      if (upper.isEmpty) {
-                        setState(() => plateError = null);
-                        return;
-                      }
+                        // 🔠 Forzar mayúsculas
+                        _plateController.value = _plateController.value
+                            .copyWith(
+                              text: upper,
+                              selection: TextSelection.collapsed(
+                                offset: upper.length,
+                              ),
+                            );
 
-                      if (!plateRegex.hasMatch(upper)) {
-                        setState(
-                          () => plateError =
-                              'Formato inválido (Ej: ABC123 o ABC-123)',
+                        // ✅ Validación en tiempo real
+                        if (upper.isEmpty) {
+                          setState(() => plateError = null);
+                          return;
+                        }
+
+                        if (!plateRegex.hasMatch(upper)) {
+                          setState(
+                            () => plateError =
+                                'Formato inválido (Ej: ABC123 o ABC-123)',
+                          );
+                        } else {
+                          setState(() => plateError = null);
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    DropdownButtonFormField<VehicleType>(
+                      initialValue: vehicleType,
+                      items: VehicleType.values.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text('${type.icon} ${type.label}'),
                         );
-                      } else {
-                        setState(() => plateError = null);
-                      }
-                    },
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  DropdownButtonFormField<VehicleType>(
-                    initialValue: vehicleType,
-                    items: VehicleType.values.map((type) {
-                      return DropdownMenuItem(
-                        value: type,
-                        child: Text('${type.icon} ${type.label}'),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      setState(() => vehicleType = value!);
-                    },
-                    decoration: const InputDecoration(
-                      labelText: 'Tipo de vehículo',
-                      border: OutlineInputBorder(),
+                      }).toList(),
+                      onChanged: (value) {
+                        setState(() => vehicleType = value!);
+                      },
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de vehículo',
+                        border: OutlineInputBorder(),
+                      ),
                     ),
-                  ),
 
-                  const SizedBox(height: 12),
+                    const SizedBox(height: 12),
 
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      final plate = _plateController.text.trim();
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        final plate = _plateController.text.trim();
 
-                      if (plate.isEmpty) return;
+                        if (plate.isEmpty) return;
 
-                      final newVehicle = Vehicle(
-                        plate: plate,
-                        alias: 'Consultando: $plate',
-                        vehicleTypeIndex: vehicleType.index,
-                        cityId: city?.id ?? cityRuleUtils.id,
-                      );
+                        final newVehicle = Vehicle(
+                          plate: plate,
+                          alias: 'Consultando: $plate',
+                          vehicleTypeIndex: vehicleType.index,
+                          cityId: city?.id ?? cityRuleUtils.id,
+                        );
 
-                      Navigator.pop(context, newVehicle);
-                    },
-                    icon: const Icon(Icons.directions_car),
-                    label: const Text('Consultar'),
-                  ),
-                ],
+                        Navigator.pop(context, newVehicle);
+                      },
+                      icon: const Icon(Icons.directions_car),
+                      label: const Text('Consultar'),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ],
         ),
       ),
