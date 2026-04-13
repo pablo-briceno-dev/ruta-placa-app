@@ -11,12 +11,16 @@ class LegendItem extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+            border: Border.all(color: color, width: 1.5),
+          ),
         ),
         const SizedBox(width: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(label, style: Theme.of(context).textTheme.bodyMedium),
       ],
     );
   }

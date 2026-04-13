@@ -1,6 +1,7 @@
 // Estado de carga
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/services/rules_service.dart';
 
@@ -36,11 +37,13 @@ final rulesInitProvider = FutureProvider<List<CityRule>>((ref) async {
 });
 
 // Provider derivado - buscar ciudad por id
-final cityByIdProvider = Provider.family<CityRule?, String>((ref, id) {
+final cityByIdProvider = Provider.family<CityRule?, String?>((ref, id) {
   final rules = ref.watch(rulesProvider);
   if (rules.status != RulesStatus.ready) return null;
   try {
-    return rules.cities.firstWhere((c) => c.id == id);
+    return id == null
+        ? cityRuleUtils
+        : rules.cities.firstWhere((c) => c.id == id);
   } catch (_) {
     return null;
   }

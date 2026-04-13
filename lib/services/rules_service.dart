@@ -152,7 +152,8 @@ class RulesService {
 
     try {
       final json = jsonDecode(content) as Map<String, dynamic>;
-      return _parseRules(json);
+      final rules = _parseRules(json);
+      return rules;
     } catch (_) {
       return _fallbackRules();
     }

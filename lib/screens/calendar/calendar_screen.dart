@@ -10,7 +10,7 @@ import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 import 'package:ruta_placa/screens/calendar/colors_schedule_panel.dart';
 import 'package:ruta_placa/screens/calendar/day_detail_panel.dart';
-import 'package:ruta_placa/screens/calendar/table_calendar_panel.dart';
+import 'package:ruta_placa/widgets/table_calendar_panel.dart';
 import 'package:ruta_placa/screens/calendar/vehicles_selector_button.dart';
 import 'package:ruta_placa/widgets/city_selector_button_widget.dart';
 import 'package:ruta_placa/widgets/update_icon_widget.dart';
@@ -46,7 +46,7 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
     final rules = ref.watch(rulesProvider);
     final defaultVehicle = ref.watch(defaultVehicleProvider);
     final selectedCity = ref.watch(selectedCityProvider);
-    final city = ref.watch(cityByIdProvider(selectedCity ?? 'bogota'));
+    final city = ref.watch(cityByIdProvider(selectedCity));
     final vehicle = Vehicle(
       plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
       alias: selectedVehicle?.alias ?? defaultVehicle?.alias ?? 'Test',

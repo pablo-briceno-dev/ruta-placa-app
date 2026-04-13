@@ -106,16 +106,16 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   Future<void> _confirmClearAll(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Borrar toda la ruta'),
         content: const Text('¿Estás seguro? Se eliminarán todas las ciudades.'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.pop(dialogContext, true),
             child: const Text('Borrar'),
           ),
         ],

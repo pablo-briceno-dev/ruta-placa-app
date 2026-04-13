@@ -33,7 +33,7 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
         )
         .toList();
     final selectedCity = ref.watch(selectedCityProvider);
-    final city = ref.watch(cityByIdProvider(selectedCity ?? 'bogota'));
+    final city = ref.watch(cityByIdProvider(selectedCity));
     final plateRegex = RegExp(
       r'^[A-Z]{3}-?\d{2}[A-Z0-9]$',
       caseSensitive: false,
