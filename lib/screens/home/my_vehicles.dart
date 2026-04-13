@@ -10,7 +10,7 @@ class MyVehicles extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final vehicles = ref.watch(vehiclesProvider);
+    final vehicles = ref.watch(vehiclesProvider).vehicles;
     final defaultVehicle = ref.watch(defaultVehicleProvider);
 
     return Expanded(
@@ -72,12 +72,12 @@ class MyVehicles extends ConsumerWidget {
                     )
                   : const SizedBox(),
             ),
-            ...vehicles.entries.map((vehicle) {
-              if (defaultVehicle?.plate != vehicle.value.plate) {
+            ...vehicles.map((vehicle) {
+              if (defaultVehicle?.plate != vehicle.plate) {
                 return AnimatedOpacity(
                   duration: const Duration(milliseconds: 300),
                   opacity: 1,
-                  child: MyVehicleCard(vehicle: vehicle.value),
+                  child: MyVehicleCard(vehicle: vehicle),
                 );
               }
               return const SizedBox();

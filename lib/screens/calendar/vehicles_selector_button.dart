@@ -17,11 +17,13 @@ class VehiclesSelectorButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final defaultVehicle = ref.watch(defaultVehicleProvider);
-    final vehicles = ref.watch(vehiclesProvider);
+    final vehiclesState = ref.watch(vehiclesProvider);
     final vehicle =
         selected ??
         defaultVehicle ??
-        (vehicles.isNotEmpty ? vehicles.values.first : null);
+        (vehiclesState.vehicles.isNotEmpty
+            ? vehiclesState.vehicles.first
+            : null);
 
     return InkWell(
       borderRadius: BorderRadius.circular(20),
@@ -29,9 +31,8 @@ class VehiclesSelectorButton extends ConsumerWidget {
         final result = await showModalBottomSheet<Vehicle>(
           context: context,
           isScrollControlled: true,
-          builder: (_) => VehiclesSelectorSheet(
-            vehicles: vehicles.entries.map((e) => e.value).toList(),
-          ),
+          builder: (_) =>
+              VehiclesSelectorSheet(vehicles: vehiclesState.vehicles),
         );
 
         if (result != null) {

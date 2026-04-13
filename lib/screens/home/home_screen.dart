@@ -7,6 +7,7 @@ import 'package:ruta_placa/screens/home/form_vehicle_screen.dart';
 import 'package:ruta_placa/screens/home/my_vehicles.dart';
 import 'package:ruta_placa/screens/home/restricted_digits_row.dart';
 import 'package:ruta_placa/widgets/city_selector_button_widget.dart';
+import 'package:ruta_placa/widgets/city_selector_sheet_widget.dart';
 import 'package:ruta_placa/widgets/update_icon_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -27,6 +28,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (!_checked) {
         ref.read(rulesProvider.notifier).checkForUpdates();
         _checked = true;
+      }
+    });
+
+    Future.microtask(() async {
+      final selectedCity = ref.watch(selectedCityProvider);
+
+      if (selectedCity == null && mounted) {
+        _showCitySelector();
       }
     });
   }
@@ -87,6 +96,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showCitySelector() {
+    showModalBottomSheet(
+      context: context,
+      isDismissible: false, // 🔥 importante
+      enableDrag: false, // 🔥 bloquea cerrar
+      isScrollControlled: true,
+      builder: (_) => const CitySelectorSheetWidget(),
     );
   }
 }

@@ -6,6 +6,7 @@ import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
 import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
+import 'package:ruta_placa/services/database_service.dart';
 import 'package:ruta_placa/services/rules_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,6 +18,9 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
 
   await initializeDateFormatting('es_ES', null);
+
+  // SQLite — precalentar la conexión
+  await DatabaseService.instance.db;
 
   runApp(
     ProviderScope(

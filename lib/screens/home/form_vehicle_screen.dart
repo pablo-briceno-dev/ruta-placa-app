@@ -159,17 +159,17 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                         vehicleTypeIndex: _vehicleType.index,
                       );
 
-                      final vehicles = ref.read(vehiclesProvider);
+                      final vehicles = ref.read(vehiclesProvider).vehicles;
 
                       if (vehicles.isEmpty) {
-                        await ref.read(setDefaultVehicleProvider)(
-                          vehicle.plate,
-                        );
+                        await ref
+                            .read(vehiclesProvider.notifier)
+                            .setDefault(vehicle.plate);
                       }
 
                       ref
                           .read(vehiclesProvider.notifier)
-                          .addOrUpdateVehicle(vehicle);
+                          .add(vehicle);
 
                       if (context.mounted) {
                         AppSnackbar.success(context, 'Vehículo guardado');
@@ -211,7 +211,7 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                         if (confirm == true) {
                           await ref
                               .read(vehiclesProvider.notifier)
-                              .removeVehicle(widget.vehicle!.plate);
+                              .remove(widget.vehicle!.plate);
 
                           if (context.mounted) {
                             AppSnackbar.success(context, 'Vehículo eliminado');
