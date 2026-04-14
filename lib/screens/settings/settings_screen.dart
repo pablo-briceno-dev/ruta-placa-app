@@ -1,14 +1,19 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/settings_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 import 'package:ruta_placa/screens/settings/info_tile.dart';
 import 'package:ruta_placa/screens/settings/section_card.dart';
 import 'package:ruta_placa/screens/settings/section_header.dart';
+import 'package:ruta_placa/screens/settings/test_notificacion.dart';
 import 'package:ruta_placa/screens/settings/theme_tile.dart';
 import 'package:ruta_placa/services/notification_service.dart';
+import 'package:ruta_placa/services/rules_service.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -36,6 +41,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final themeMode = ref.watch(themeModeProvider);
     final notifState = ref.watch(notificationSettingsProvider);
     final vehicles = ref.watch(vehiclesProvider).vehicles;
+    final cities = ref.watch(rulesProvider).cities;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -105,6 +111,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               if (notifState.notificationsEnabled) ...[
+                if (kDebugMode) ...[
+                  // Test notification ------------------------------
+                  const Divider(height: 1),
+                  TestNotificacion(),
+                  // ------------------------------------------------
+                ],
                 const Divider(height: 1),
                 // Dia anterior
                 SwitchListTile(
@@ -266,24 +278,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   'Si la app te es útil, considera apoyar su desarrollo',
                   style: textTheme.bodySmall,
                 ),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.pink.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.pink.shade300, width: 0.5),
-                  ),
-                  child: Text(
-                    'Próximamente',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: Colors.pink.shade700,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
+                onTap: () => _showDonationInfo(context),
               ),
 
               const Divider(height: 1),
@@ -295,7 +290,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 leading: _iconBox(Icons.star_outline, colorScheme.primary),
                 title: Text('Quitar anuncios', style: textTheme.titleSmall),
                 subtitle: Text(
-                  'Compra única para disfrutar sin publicidad',
+                  'Compra única o suscripción para disfrutar sin publicidad',
                   style: textTheme.bodySmall,
                 ),
                 trailing: Container(
@@ -335,13 +330,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               InfoTile(
                 icon: Icons.location_city_outlined,
                 label: 'Ciudades disponibles',
-                value: '6', // !Corregir
+                value: cities.length.toString(),
               ),
               const Divider(height: 1),
               InfoTile(
                 icon: Icons.update_outlined,
-                label: 'Reglas actualizadas',
-                value: 'Abril 2026', // !Corregir
+                label: 'Reglas actualizadas (Pico y Placa)',
+                value:
+                    RulesService.instance.cachedLastCheck ??
+                    'Sin datos disponibles',
               ),
               const Divider(height: 1),
               ListTile(
@@ -393,7 +390,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   // ── Helpers ───────────────────────────────────────────
-
   Widget _iconBox(IconData icon, Color color) => Container(
     width: 40,
     height: 40,
@@ -440,7 +436,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _refreshRules(BuildContext context) async {
     // Llama al RulesNotifier que ya definimos antes
-    // ref.read(rulesProvider.notifier).refresh();
+    ref.read(rulesProvider.notifier).refresh();
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Actualizando reglas...')));
@@ -449,7 +445,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showReportDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Reportar un error'),
         content: const Text(
           'Si encontraste información incorrecta sobre el pico y placa, '
@@ -457,8 +453,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDonationInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Donación voluntaria'),
+        content: Text(
+          'Si esta app te ha sido útil, puedes apoyar su desarrollo con una donación voluntaria. Cada aporte ayuda a seguir mejorándola.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cerrar'),
+          ),
+          FilledButton.icon(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await launchUrl(
+                Uri.parse('https://www.paypal.com/paypalme/pablobricenodev/1'),
+                mode: LaunchMode.externalApplication,
+              );
+            },
+            icon: const Icon(Icons.volunteer_activism_outlined, size: 16),
+            label: const Text('PayPal'),
           ),
         ],
       ),

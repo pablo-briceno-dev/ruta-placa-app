@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/rotation_rule.dart';
@@ -210,6 +211,15 @@ class RulesService {
   }
 
   String? get cachedVersion => _prefs.getString(_keyVersion);
+
+  String? get cachedLastCheck {
+    final lastCheck = _prefs.getInt(_keyLastCheck);
+    if (lastCheck == null) return null;
+    final date = DateTime.fromMillisecondsSinceEpoch(lastCheck);
+    final formatter = DateFormat("MMMM d 'del' yyyy", 'es');
+    final formattedDate = formatter.format(date);
+    return formattedDate[0].toUpperCase() + formattedDate.substring(1);
+  }
 
   Future<bool> hasNewVersion() async {
     try {

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -156,8 +158,20 @@ class NotificationService {
     required String body,
     required DateTime time,
   }) async {
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    // Intentar alarma exacta, si falla usar inexacta
+    final canExact = Platform.isAndroid
+        ? await androidPlugin?.canScheduleExactNotifications() ?? false
+        : true;
+
     await _plugin.zonedSchedule(
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexact,
       id: id,
       scheduledDate: tz.TZDateTime.from(time, tz.local),
       notificationDetails: const NotificationDetails(
