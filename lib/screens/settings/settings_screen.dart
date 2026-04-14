@@ -1,67 +1,464 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ruta_placa/models/vehicle_restriction.dart';
-import 'package:ruta_placa/providers/rules_provider.dart';
-import 'package:ruta_placa/services/rules_service.dart';
-import 'package:ruta_placa/data/holidays_co.dart' as holidays;
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:ruta_placa/providers/settings_provider.dart';
+import 'package:ruta_placa/providers/theme_provider.dart';
+import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/screens/settings/info_tile.dart';
+import 'package:ruta_placa/screens/settings/section_card.dart';
+import 'package:ruta_placa/screens/settings/section_header.dart';
+import 'package:ruta_placa/screens/settings/theme_tile.dart';
+import 'package:ruta_placa/services/notification_service.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
-  // !DEBUG - DELETE ME
-  void testBogota() {
-    final restriction = VehicleRestriction.fromJson({
-      "scheduleType": "rotating_alternating",
-      "rotation": {
-        "cycleStartDate": "2026-04-08",
-        "weekdaysApply": [1, 2, 3, 4, 5],
-        "rotationCycle": [
-          [1, 2, 3, 4, 5],
-          [6, 7, 8, 9, 0],
-        ],
-      },
-      "morningStart": "06:00",
-      "morningEnd": "20:00",
-    });
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
 
-    final fechas = {
-      'Mié  8 abr → [1,2,3,4,5]': DateTime(2026, 4, 8),
-      'Jue  9 abr → [6,7,8,9,0]': DateTime(2026, 4, 9),
-      'Vie 10 abr → [1,2,3,4,5]': DateTime(2026, 4, 10),
-      'Lun 13 abr → [6,7,8,9,0]': DateTime(2026, 4, 13),
-      'Mar 14 abr → [1,2,3,4,5]': DateTime(2026, 4, 14),
-      'Jue 30 abr → [1,2,3,4,5]': DateTime(2026, 4, 30),
-      'Vie  1 may → NINGUNO': DateTime(2026, 5, 1),
-      'Dom  3 may → TODOS': DateTime(2026, 5, 3),
-      'Lun  4 may → [1,2,3,4,5]': DateTime(2026, 5, 4), // ← el que fallaba
-      'Mar  5 may → [6,7,8,9,0]': DateTime(2026, 5, 5),
-      'Mié  6 may → [1,2,3,4,5]': DateTime(2026, 5, 6),
-    };
-
-    fechas.forEach((label, date) {
-      final result = restriction.platesForDayWithContext(
-        date: date,
-        isHoliday: holidays.isHoliday(date),
-      );
-      debugPrint('$label → ${result.appliesToAll ? "TODOS" : result.plates}');
-    });
-  }
-  // ! ========================================================================
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  String _version = '';
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) setState(() => _version = info.version);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final themeMode = ref.watch(themeModeProvider);
+    final notifState = ref.watch(notificationSettingsProvider);
+    final vehicles = ref.watch(vehiclesProvider).vehicles;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       appBar: AppBar(title: const Text('Ajustes')),
-      body: Column(
+      body: ListView(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          ListTile(
-            title: Text('Versión de reglas'),
-            subtitle: Text(RulesService.instance.cachedVersion ?? 'Sin datos'),
-            trailing: IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: () => ref.read(rulesProvider.notifier).refresh(),
-              // onPressed: () => testBogota(),
+          // General --------------------
+          SectionHeader('General'),
+          SectionCard(
+            children: [
+              ThemeTile(
+                label: 'Seguir sistema',
+                subtitle: 'Usa el tema del dispositivo',
+                icon: Icons.brightness_auto_outlined,
+                selected: themeMode == ThemeMode.system,
+                onTap: () => ref
+                    .read(themeModeProvider.notifier)
+                    .setMode(ThemeMode.system),
+              ),
+              const Divider(height: 1),
+              ThemeTile(
+                label: 'Modo claro',
+                subtitle: 'Fondo blanco',
+                icon: Icons.light_mode_outlined,
+                selected: themeMode == ThemeMode.light,
+                onTap: () => ref
+                    .read(themeModeProvider.notifier)
+                    .setMode(ThemeMode.light),
+              ),
+              const Divider(height: 1),
+              ThemeTile(
+                label: 'Modo oscuro',
+                subtitle: 'Fondo negro',
+                icon: Icons.light_mode_outlined,
+                selected: themeMode == ThemeMode.dark,
+                onTap: () => ref
+                    .read(themeModeProvider.notifier)
+                    .setMode(ThemeMode.dark),
+              ),
+            ],
+          ),
+          // Notificaciones --------------------
+          SectionHeader('Notificaciones'),
+          SectionCard(
+            children: [
+              // Master switch
+              SwitchListTile(
+                value: notifState.notificationsEnabled,
+                onChanged: (v) => _toggleNotifications(v),
+                secondary: _iconBox(
+                  Icons.notifications_outlined,
+                  colorScheme.primary,
+                ),
+                title: Text(
+                  'Activar notificaciones',
+                  style: textTheme.titleSmall,
+                ),
+                subtitle: Text(
+                  'Recibe avisos cuando tengas pico y placa',
+                  style: textTheme.bodySmall,
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+              ),
+              if (notifState.notificationsEnabled) ...[
+                const Divider(height: 1),
+                // Dia anterior
+                SwitchListTile(
+                  value: notifState.dayBeforeEnabled,
+                  onChanged: (value) => ref
+                      .read(notificationSettingsProvider.notifier)
+                      .setDayBefore(value),
+                  secondary: _iconBox(
+                    Icons.wb_twilight_outlined,
+                    Colors.indigo,
+                  ),
+                  title: Text('Día anterior', style: textTheme.bodySmall),
+                  subtitle: Text(
+                    'Aviso al día anterior al pico y placa',
+                    style: textTheme.bodySmall,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                ),
+                if (notifState.dayBeforeEnabled) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 0,
+                    ),
+                    leading: _iconBox(
+                      Icons.access_time_outlined,
+                      Colors.indigo.withValues(alpha: 0.6),
+                    ),
+                    title: Text('Hora del aviso', style: textTheme.bodyMedium),
+                    subtitle: Text(
+                      'Se enviará a esta hora',
+                      style: textTheme.bodySmall,
+                    ),
+                    trailing: GestureDetector(
+                      onTap: () => _pickTime(context),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          notifState.dayBeforeTimeFormatted,
+                          style: textTheme.titleSmall?.copyWith(
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+
+                const Divider(height: 1),
+
+                // Mismo día ----------------------
+                SwitchListTile(
+                  value: notifState.sameDayEnabled,
+                  onChanged: (value) => ref
+                      .read(notificationSettingsProvider.notifier)
+                      .setSameDay(value),
+                  secondary: _iconBox(Icons.alarm_outlined, Colors.orange),
+                  title: Text('Mismo día', style: textTheme.titleSmall),
+                  subtitle: Text(
+                    '1 hora antes del inicio del pico y placa',
+                    style: textTheme.bodySmall,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                ),
+
+                const Divider(height: 1),
+                // Por Vehículo ---------------------------------
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                  child: Text(
+                    'Alertas por Vehículo',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+                if (vehicles.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    child: Text(
+                      'Agrega vehículos en la pantalla de Inicio',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurface.withValues(alpha: 0.4),
+                      ),
+                    ),
+                  ),
+                if (vehicles.isNotEmpty)
+                  ...vehicles.asMap().entries.map((entry) {
+                    final i = entry.key;
+                    final v = entry.value;
+                    return Column(
+                      children: [
+                        if (i > 0) const Divider(height: 1),
+                        SwitchListTile(
+                          value: notifState.isVehicleEnabled(v.id!),
+                          onChanged: (enabled) => ref
+                              .read(notificationSettingsProvider.notifier)
+                              .toggleVehicle(v.id!, enabled),
+                          secondary: Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: colorScheme.surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Center(
+                              child: Text(
+                                v.vehicleType.icon,
+                                style: const TextStyle(fontSize: 16),
+                              ),
+                            ),
+                          ),
+                          title: Text(v.alias, style: textTheme.titleSmall),
+                          subtitle: Text(
+                            '${v.plate} · ${v.vehicleType.label}',
+                            style: textTheme.bodySmall,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+              ],
+            ],
+          ),
+          // Donaciones -----------------------
+          SectionHeader('Apoyar RutaPlaca'),
+          SectionCard(
+            children: [
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                leading: _iconBox(Icons.favorite_outline, Colors.pink),
+                title: Text(
+                  'Donar voluntariamente',
+                  style: textTheme.titleSmall,
+                ),
+                subtitle: Text(
+                  'Si la app te es útil, considera apoyar su desarrollo',
+                  style: textTheme.bodySmall,
+                ),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.pink.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.pink.shade300, width: 0.5),
+                  ),
+                  child: Text(
+                    'Próximamente',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Colors.pink.shade700,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                leading: _iconBox(Icons.star_outline, colorScheme.primary),
+                title: Text('Quitar anuncios', style: textTheme.titleSmall),
+                subtitle: Text(
+                  'Compra única para disfrutar sin publicidad',
+                  style: textTheme.bodySmall,
+                ),
+                trailing: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.amber.shade600,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: Text(
+                    'Próximamente',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: Colors.amber.shade800,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          // Acerca de -----------------------
+          SectionHeader('Acerca de'),
+          SectionCard(
+            children: [
+              InfoTile(
+                icon: Icons.info_outline,
+                label: 'Versión',
+                value: _version.isEmpty ? '...' : _version,
+              ),
+              const Divider(height: 1),
+              InfoTile(
+                icon: Icons.location_city_outlined,
+                label: 'Ciudades disponibles',
+                value: '6', // !Corregir
+              ),
+              const Divider(height: 1),
+              InfoTile(
+                icon: Icons.update_outlined,
+                label: 'Reglas actualizadas',
+                value: 'Abril 2026', // !Corregir
+              ),
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                leading: Icon(
+                  Icons.refresh_outlined,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  size: 20,
+                ),
+                title: Text('Actualizar reglas', style: textTheme.bodyMedium),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
+                  size: 18,
+                ),
+                onTap: () => _refreshRules(context),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                leading: Icon(
+                  Icons.bug_report_outlined,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                  size: 20,
+                ),
+                title: Text('Reportar un error', style: textTheme.bodyMedium),
+                trailing: Icon(
+                  Icons.chevron_right,
+                  color: colorScheme.onSurface.withValues(alpha: 0.4),
+                  size: 18,
+                ),
+                onTap: () => _showReportDialog(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Center(
+            child: Text(
+              'Hecho con ❤️ en Colombia',
+              style: textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.35),
+              ),
             ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  // ── Helpers ───────────────────────────────────────────
+
+  Widget _iconBox(IconData icon, Color color) => Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Icon(icon, color: color, size: 20),
+  );
+
+  Future<void> _toggleNotifications(bool value) async {
+    if (value) {
+      final granted = await NotificationService.instance.requestPermission();
+      if (!granted && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Debes permitir las notificaciones en Ajustes del sistema',
+            ),
+          ),
+        );
+        return;
+      }
+    }
+    await ref.read(notificationSettingsProvider.notifier).setEnabled(value);
+  }
+
+  Future<void> _pickTime(BuildContext context) async {
+    final current = ref.read(notificationSettingsProvider);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(
+        hour: current.dayBeforeHour,
+        minute: current.dayBeforeMinute,
+      ),
+      helpText: 'Hora del aviso del día anterior',
+    );
+    if (picked != null) {
+      await ref
+          .read(notificationSettingsProvider.notifier)
+          .setDayBeforeTime(picked.hour, picked.minute);
+    }
+  }
+
+  Future<void> _refreshRules(BuildContext context) async {
+    // Llama al RulesNotifier que ya definimos antes
+    // ref.read(rulesProvider.notifier).refresh();
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Actualizando reglas...')));
+  }
+
+  void _showReportDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Reportar un error'),
+        content: const Text(
+          'Si encontraste información incorrecta sobre el pico y placa, '
+          'escríbenos a pablo.briceno.dev@gmail.com con el asunto RutaPlaca',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
           ),
         ],
       ),

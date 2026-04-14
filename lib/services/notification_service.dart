@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
@@ -55,6 +56,19 @@ class NotificationService {
     await _plugin.cancelAll();
 
     if (!settings.notificationsEnabled) return;
+
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+
+    if (androidPlugin != null) {
+      final granted = await androidPlugin.requestExactAlarmsPermission();
+      if (granted != true) {
+        debugPrint('Permiso de alarma exacta denegado');
+        return;
+      }
+    }
 
     for (final vehicle in vehicles) {
       if (!settings.isVehicleEnabled(vehicle.id!)) continue;
