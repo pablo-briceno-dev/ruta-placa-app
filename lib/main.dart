@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/date_symbol_data_local.dart' show initializeDateFormatting;
 import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
 import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
+import 'package:ruta_placa/services/admob_service.dart';
 import 'package:ruta_placa/services/background_service.dart';
 import 'package:ruta_placa/services/database_service.dart';
 import 'package:ruta_placa/services/notification_service.dart';
@@ -17,6 +21,7 @@ import 'package:workmanager/workmanager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  unawaited(MobileAds.instance.initialize());
 
   await RulesService.instance.init();
 
@@ -33,6 +38,7 @@ void main() async {
   );
 
   await WidgetService.instance.init();
+  AdmobService.instance.loadInterstitial(); // precarga
 
   // SQLite — precalentar la conexión
   await DatabaseService.instance.db;

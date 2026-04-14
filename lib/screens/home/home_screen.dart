@@ -60,32 +60,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: const Icon(Icons.add),
             )
           : null,
-      body: Column(
-        children: [
-          // !Banner Ad (parte superior o inferior de la pantalla)
-          // const AdBannerWidget(),
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RestrictedDigitsRow(
-                    cityId: city?.id ?? 'bogota',
-                    plate: defaultVehicle?.plate ?? '',
-                  ),
-                  const Divider(),
-                  const Text(
-                    'Mis Vehículos',
-                    textAlign: TextAlign.start,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                  MyVehicles(),
-                ],
-              ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            RestrictedDigitsRow(
+              cityId: city?.id ?? 'bogota',
+              plate: defaultVehicle?.plate ?? '',
             ),
-          ),
-        ],
+            const Divider(),
+            const Text(
+              'Mis Vehículos',
+              textAlign: TextAlign.start,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            MyVehicles(),
+          ],
+        ),
       ),
     );
   }
