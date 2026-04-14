@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="widget_small_description">Pico y placa hoy</string>
+    <string name="widget_large_description">Pico y placa hoy y mañana</string>
+    <string name="app_name">RutaPlaca</string>
+</resources>

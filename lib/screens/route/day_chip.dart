@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ruta_placa/core/utils/date_utils.dart';
 import 'package:ruta_placa/models/pico_placa_result.dart';
 
 class DayChip extends StatelessWidget {
@@ -31,7 +32,7 @@ class DayChip extends StatelessWidget {
       label = 'Libre';
     }
 
-    final dayLabel = isToday ? 'Hoy' : _weekdayShort(date.weekday);
+    final dayLabel = isToday ? 'Hoy' : weekdayShortUtils(date.weekday);
 
     return Container(
       margin: const EdgeInsets.only(right: 6),
@@ -63,10 +64,5 @@ class DayChip extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _weekdayShort(int weekday) {
-    const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-    return days[weekday - 1];
   }
 }

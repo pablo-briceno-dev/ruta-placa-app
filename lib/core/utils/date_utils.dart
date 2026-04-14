@@ -28,3 +28,8 @@ String formatDuration(Duration d) {
     return '${minutes}m';
   }
 }
+
+String weekdayShortUtils(int weekday) {
+  const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  return days[weekday - 1];
+}

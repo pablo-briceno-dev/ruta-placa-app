@@ -139,9 +139,9 @@ class MyVehicleCard extends ConsumerWidget {
                           color: theme.colorScheme.primaryContainer,
                           onPressed: () {
                             if (!isDefault) {
-                              ref.read(vehiclesProvider.notifier).setDefault(
-                                vehicle.plate,
-                              );
+                              ref
+                                  .read(vehiclesProvider.notifier)
+                                  .setDefault(vehicle.plate);
                             }
                           },
                         ),

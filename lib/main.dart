@@ -4,16 +4,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart' show initializeDateFormatting;
 import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
-import 'package:ruta_placa/providers/rules_provider.dart';
-import 'package:ruta_placa/providers/settings_provider.dart';
 import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
-import 'package:ruta_placa/providers/vehicles_provider.dart';
-import 'package:ruta_placa/services/city_rules_reader.dart';
+import 'package:ruta_placa/services/background_service.dart';
 import 'package:ruta_placa/services/database_service.dart';
 import 'package:ruta_placa/services/notification_service.dart';
 import 'package:ruta_placa/services/rules_service.dart';
+import 'package:ruta_placa/services/widget_service.dart';
+import 'package:ruta_placa/widgets/global_listeners.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +24,16 @@ void main() async {
 
   await initializeDateFormatting('es_ES', null);
 
+  await Workmanager().initialize(callbackDispatcher);
+  await Workmanager().registerPeriodicTask(
+    'widgetUpdate',
+    taskName,
+    frequency: const Duration(minutes: 30),
+    constraints: Constraints(networkType: NetworkType.notRequired),
+  );
+
+  await WidgetService.instance.init();
+
   // SQLite — precalentar la conexión
   await DatabaseService.instance.db;
   await NotificationService.instance.init();
@@ -31,7 +41,7 @@ void main() async {
   runApp(
     ProviderScope(
       overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
-      child: MyApp(),
+      child: GlobalListeners(child: MyApp()),
     ),
   );
 }
@@ -43,16 +53,6 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
-    ref.listen(notificationSettingsProvider, (_, next) async {
-      if (!next.notificationsEnabled) return;
-      final vehicles = ref.read(vehiclesProvider).vehicles;
-      final rules = ref.read(rulesProvider);
-      await NotificationService.instance.scheduleAll(
-        vehicles: vehicles,
-        settings: next,
-        rulesReader: CityRulesReader(rules.cities),
-      );
-    });
 
     return MaterialApp.router(
       title: 'RutaPlaca',

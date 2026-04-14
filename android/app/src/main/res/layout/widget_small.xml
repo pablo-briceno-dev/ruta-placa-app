@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- Header: nombre de la app -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:src="@mipmap/ic_launcher"
+            android:layout_marginEnd="6dp"/>
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="RutaPlaca"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold"/>
+
+        <TextView
+            android:id="@+id/ws_city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Bogotá"
+            android:textColor="#888888"
+            android:textSize="10sp"/>
+
+    </LinearLayout>
+
+    <!-- Fila de chips -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <!-- Chip hoy -->
+        <LinearLayout
+            android:id="@+id/ws_chip_today"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_chip_green"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp"
+            android:layout_marginEnd="5dp">
+
+            <TextView
+                android:id="@+id/ws_today_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Hoy"
+                android:textColor="#1DB954"
+                android:textSize="11sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/ws_today_digits"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Libre"
+                android:textColor="#1DB954"
+                android:textSize="10sp"
+                android:layout_marginTop="2dp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+        <!-- Chip Mañana -->
+        <LinearLayout
+            android:id="@+id/ws_chip_day2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_chip_gray"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp"
+            android:layout_marginEnd="5dp">
+
+            <TextView
+                android:id="@+id/ws_day2_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mié"
+                android:textColor="#AAAAAA"
+                android:textSize="11sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/ws_day2_digits"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Libre"
+                android:textColor="#AAAAAA"
+                android:textSize="10sp"
+                android:layout_marginTop="3dp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+        <!-- Chip Pasado mañana -->
+        <LinearLayout
+            android:id="@+id/ws_chip_day3"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/widget_chip_gray"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:padding="8dp">
+
+            <TextView
+                android:id="@+id/ws_day3_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Jue"
+                android:textColor="#AAAAAA"
+                android:textSize="11sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/ws_day3_digits"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1·2·3·4·5"
+                android:textColor="#AAAAAA"
+                android:textSize="10sp"
+                android:layout_marginTop="3dp"
+                android:gravity="center"/>
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>
