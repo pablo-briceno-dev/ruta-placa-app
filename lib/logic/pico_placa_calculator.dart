@@ -105,6 +105,9 @@ class PicoPlacaCalculator {
 
     final lastDigit = _extractLastDigit(plate);
     final inTime = time == null || _isInRestrictionTime(restriction, time);
+    // debugPrint(
+    //   '${result.plates.contains(lastDigit)} && $inTime $time $restriction ${_isInRestrictionTime(restriction, time ?? 0)}',
+    // );
 
     return PicoPlacaResult(
       hasRestriction: result.plates.contains(lastDigit) && inTime,

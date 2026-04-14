@@ -2,15 +2,32 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ruta_placa/core/utils/date_utils.dart';
+import 'package:ruta_placa/models/time_range.dart';
+
+class CurrentState {
+  final String label;
+  final Duration remaining;
+  final bool isRestricted;
+  final TimeRange range;
+
+  const CurrentState({
+    required this.label,
+    required this.remaining,
+    required this.isRestricted,
+    required this.range,
+  });
+}
 
 class RestrictionTimerWidget extends StatefulWidget {
-  final TimeOfDay endTime;
   final bool isRestricted;
+  final List<TimeRange> ranges;
+  final bool viewRange;
 
   const RestrictionTimerWidget({
     super.key,
-    required this.endTime,
     required this.isRestricted,
+    required this.ranges,
+    this.viewRange = true,
   });
 
   @override
@@ -19,6 +36,9 @@ class RestrictionTimerWidget extends StatefulWidget {
 
 class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
   late Duration remaining;
+  late String label;
+  late bool isRestricted;
+  late TimeRange range;
   Timer? timer;
 
   @override
@@ -32,17 +52,13 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
   }
 
   void _updateTime() {
-    final now = DateTime.now();
-    final end = DateTime(
-      now.year,
-      now.month,
-      now.day,
-      widget.endTime.hour,
-      widget.endTime.minute,
-    );
+    final state = getCurrentState(widget.ranges);
 
     setState(() {
-      remaining = end.difference(now);
+      remaining = state.remaining.isNegative ? Duration.zero : state.remaining;
+      label = state.label;
+      isRestricted = state.isRestricted;
+      range = state.range;
     });
   }
 
@@ -60,7 +76,10 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
       child: Column(
         children: [
           Text(
-            'Termina en',
+            '${formatTime(context, range.start)} - ${formatTime(context, range.end)}',
+          ),
+          Text(
+            label,
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: theme.textTheme.bodyMedium?.fontSize,
@@ -86,6 +105,63 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
           ),
         ],
       ),
+    );
+  }
+
+  CurrentState getCurrentState(List<TimeRange> ranges) {
+    final now = DateTime.now();
+
+    for (final range in ranges) {
+      final start = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        range.start.hour,
+        range.start.minute,
+      );
+
+      final end = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        range.end.hour,
+        range.end.minute,
+      );
+
+      if (now.isBefore(start)) {
+        return CurrentState(
+          label: "Inicia en",
+          remaining: start.difference(now),
+          isRestricted: false,
+          range: range,
+        );
+      }
+
+      if (now.isAfter(start) && now.isBefore(end)) {
+        return CurrentState(
+          label: "Termina en",
+          remaining: end.difference(now),
+          isRestricted: widget.isRestricted,
+          range: range,
+        );
+      }
+    }
+
+    final first = ranges.first;
+
+    final tomorrowStart = DateTime(
+      now.year,
+      now.month,
+      now.day + 1,
+      first.start.hour,
+      first.start.minute,
+    );
+
+    return CurrentState(
+      label: "Inicia en",
+      remaining: tomorrowStart.difference(now),
+      isRestricted: false,
+      range: range,
     );
   }
 }

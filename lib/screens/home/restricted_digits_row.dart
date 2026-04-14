@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
-import 'package:ruta_placa/core/utils/date_utils.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/core/utils/strings_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
+import 'package:ruta_placa/models/time_range.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
@@ -36,10 +36,18 @@ class RestrictedDigitsRow extends ConsumerWidget {
       plate: vehicle?.plate ?? plate,
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: date,
+      time: TimeOfDay(hour: date.hour, minute: date.minute),
     );
     final formatted = capitalizeString(
       DateFormat("EEE d", 'es_ES').format(date),
     );
+    final morningStart =
+        city?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now();
+    final morningEnd =
+        city?.restrictions[vehicleType]?.morningEnd ??
+        TimeOfDay(hour: date.hour + 6, minute: 0);
+    final afternoonStart = city?.restrictions[vehicleType]?.afternoonStart;
+    final afternoonEnd = city?.restrictions[vehicleType]?.afternoonEnd;
 
     return Card(
       child: Container(
@@ -130,17 +138,14 @@ class RestrictedDigitsRow extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 1),
                     child: Center(
-                      child: Column(
-                        children: [
-                          Text(
-                            '${formatTime(context, city?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now())} - ${formatTime(context, city?.restrictions[vehicleType]?.morningEnd ?? TimeOfDay.now())}',
-                          ),
-                          if (resultPlate.hasRestriction)
-                            RestrictionTimerWidget(
-                              endTime:
-                                  city?.restrictions[vehicleType]?.morningEnd ??
-                                  TimeOfDay.now(),
-                              isRestricted: resultPlate.hasRestriction,
+                      child: RestrictionTimerWidget(
+                        isRestricted: resultPlate.hasRestriction,
+                        ranges: [
+                          TimeRange(start: morningStart, end: morningEnd),
+                          if (afternoonStart != null)
+                            TimeRange(
+                              start: afternoonStart,
+                              end: afternoonEnd!,
                             ),
                         ],
                       ),
