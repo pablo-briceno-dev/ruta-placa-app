@@ -1,3 +1,4 @@
 <resources>
     <color name="widget_default_bg">#444444</color> <!-- gris neutro -->
+	<color name="ic_launcher_background">#121212</color>
 </resources>
