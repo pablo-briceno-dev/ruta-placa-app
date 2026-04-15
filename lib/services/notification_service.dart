@@ -218,7 +218,7 @@ class NotificationService {
           channelDescription: 'Alertas de pico y placa',
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_launcher_foreground',
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,

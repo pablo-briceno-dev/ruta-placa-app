@@ -11,6 +11,7 @@ import 'package:ruta_placa/screens/settings/section_card.dart';
 import 'package:ruta_placa/screens/settings/section_header.dart';
 import 'package:ruta_placa/screens/settings/test_notificacion.dart';
 import 'package:ruta_placa/screens/settings/theme_tile.dart';
+import 'package:ruta_placa/screens/settings/vehicles_switch_list_sheet.dart';
 import 'package:ruta_placa/services/notification_service.dart';
 import 'package:ruta_placa/services/rules_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -198,65 +199,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                 const Divider(height: 1),
                 // Por Vehículo ---------------------------------
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
-                  child: Text(
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: _iconBox(
+                      Icons.add_alert_outlined,
+                      colorScheme.primary,
+                    ),
+                  ),
+                  title: Text(
                     'Alertas por Vehículo',
-                    style: textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      letterSpacing: 0.5,
-                    ),
+                    style: textTheme.titleSmall,
                   ),
+                  subtitle: Text(
+                    vehicles.isNotEmpty
+                        ? 'Activa alarmas por cada vehículo'
+                        : 'Agrega vehículos en la pantalla de Inicio',
+                    style: textTheme.bodySmall,
+                  ),
+                  trailing: vehicles.isNotEmpty
+                      ? Icon(
+                          Icons.chevron_right,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
+                          size: 18,
+                        )
+                      : null,
+                  onTap: vehicles.isNotEmpty
+                      ? () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) => const VehiclesSwitchListSheet(),
+                          );
+                        }
+                      : null,
                 ),
-                if (vehicles.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-                    child: Text(
-                      'Agrega vehículos en la pantalla de Inicio',
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ),
-                if (vehicles.isNotEmpty)
-                  ...vehicles.asMap().entries.map((entry) {
-                    final i = entry.key;
-                    final v = entry.value;
-                    return Column(
-                      children: [
-                        if (i > 0) const Divider(height: 1),
-                        SwitchListTile(
-                          value: notifState.isVehicleEnabled(v.id!),
-                          onChanged: (enabled) => ref
-                              .read(notificationSettingsProvider.notifier)
-                              .toggleVehicle(v.id!, enabled),
-                          secondary: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: colorScheme.surfaceContainerHighest,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Center(
-                              child: Text(
-                                v.vehicleType.icon,
-                                style: const TextStyle(fontSize: 16),
-                              ),
-                            ),
-                          ),
-                          title: Text(v.alias, style: textTheme.titleSmall),
-                          subtitle: Text(
-                            '${v.plate} · ${v.vehicleType.label}',
-                            style: textTheme.bodySmall,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 4,
-                          ),
-                        ),
-                      ],
-                    );
-                  }),
               ],
             ],
           ),
