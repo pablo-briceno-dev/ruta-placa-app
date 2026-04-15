@@ -1,9 +1,9 @@
 enum VehicleType {
   particular,
   taxi,
-  moto,
-  camion,
-  bus;
+  moto;
+  // camion,
+  // bus;
 
   String get label {
     switch (this) {
@@ -13,10 +13,10 @@ enum VehicleType {
         return 'Taxi';
       case VehicleType.moto:
         return 'Moto';
-      case VehicleType.camion:
-        return 'Camión';
-      case VehicleType.bus:
-        return 'Bus / Buseta';
+      // case VehicleType.camion:
+      //   return 'Camión';
+      // case VehicleType.bus:
+      //   return 'Bus / Buseta';
     }
   }
 
@@ -28,10 +28,10 @@ enum VehicleType {
         return '🚕';
       case VehicleType.moto:
         return '🏍️';
-      case VehicleType.camion:
-        return '🚛';
-      case VehicleType.bus:
-        return '🚌';
+      // case VehicleType.camion:
+      //   return '🚛';
+      // case VehicleType.bus:
+      //   return '🚌';
     }
   }
 }

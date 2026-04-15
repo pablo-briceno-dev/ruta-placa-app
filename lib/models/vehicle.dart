@@ -28,10 +28,10 @@ class Vehicle {
         return Icon(Icons.local_taxi, color: color);
       case VehicleType.moto:
         return Icon(Icons.two_wheeler, color: color);
-      case VehicleType.camion:
-        return Icon(Icons.local_shipping, color: color);
-      case VehicleType.bus:
-        return Icon(Icons.directions_bus, color: color);
+      // case VehicleType.camion:
+      //   return Icon(Icons.local_shipping, color: color);
+      // case VehicleType.bus:
+      //   return Icon(Icons.directions_bus, color: color);
     }
   }
 
@@ -65,17 +65,4 @@ class Vehicle {
     vehicleTypeIndex: map['vehicle_type_index'] as int,
     isDefault: (map['is_default'] as int) == 1,
   );
-
-  // factory Vehicle.fromMap(Map<String, dynamic> json) => Vehicle(
-  //   plate: json['plate'] ?? '',
-  //   vehicleTypeIndex: json['vehicleTypeIndex'] ?? 0,
-  //   alias: json['alias'] ?? '',
-  //   cityId: json['cityId'] ?? 'bogota',
-  // );
-
-  // Map<String, dynamic> toJson() => {
-  //   'plate': plate,
-  //   'vehicleTypeIndex': vehicleTypeIndex,
-  //   'alias': alias,
-  // };
 }

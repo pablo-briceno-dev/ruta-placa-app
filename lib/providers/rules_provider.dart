@@ -64,7 +64,12 @@ class RulesNotifier extends StateNotifier<RulesState> {
           );
         },
       );
-      state = RulesState(status: RulesStatus.ready, cities: cities);
+      state = RulesState(
+        status: RulesStatus.ready,
+        cities: [
+          ...cities,
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+      );
     } catch (e) {
       state = RulesState(status: RulesStatus.error, error: e.toString());
     }
@@ -81,7 +86,12 @@ class RulesNotifier extends StateNotifier<RulesState> {
           );
         },
       );
-      state = RulesState(status: RulesStatus.ready, cities: cities);
+      state = RulesState(
+        status: RulesStatus.ready,
+        cities: [
+          ...cities,
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+      );
     } catch (e) {
       state = RulesState(status: RulesStatus.error, error: e.toString());
     }
@@ -99,7 +109,8 @@ class RulesNotifier extends StateNotifier<RulesState> {
 
     state = RulesState(
       status: hasUpdate ? RulesStatus.updateAvailable : RulesStatus.ready,
-      cities: cities,
+      cities: [...cities]
+        ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
     );
   }
 
@@ -114,7 +125,12 @@ class RulesNotifier extends StateNotifier<RulesState> {
           );
         },
       );
-      state = RulesState(status: RulesStatus.ready, cities: cities);
+      state = RulesState(
+        status: RulesStatus.ready,
+        cities: [
+          ...cities,
+        ]..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase())),
+      );
     } catch (_) {
       state = RulesState(status: RulesStatus.error);
     }
