@@ -2,9 +2,10 @@ enum RestrictionReason {
   normal, // día laboral normal
   holidayAll, // festivo — aplica para todos los dígitos
   holidaySundayAll, // domingo compensatorio — aplica para todos
-  holiday, // festivo viernes — no aplica
+  holidayFriday, // festivo viernes — no aplica
   weekend, // fin de semana normal — no aplica
   noRule, // no hay regla para este tipo de vehículo
+  endOfMonth,
 }
 
 class PicoPlacaResult {

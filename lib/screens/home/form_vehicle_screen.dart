@@ -141,11 +141,13 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                     items: const [
                       DropdownMenuItem(
                         value: PlateOrigin.metropolitan,
-                        child: Text('Área metropolitana'),
+                        child: Text('Área metropolitana o de esta ciudad'),
                       ),
                       DropdownMenuItem(
                         value: PlateOrigin.nationalOrForeign,
-                        child: Text('Nacional o extranjera'),
+                        child: Text(
+                          'Nacional - extranjera - fuera de esta ciudad',
+                        ),
                       ),
                     ],
                     onChanged: (v) => setState(() => _plateOrigin = v!),

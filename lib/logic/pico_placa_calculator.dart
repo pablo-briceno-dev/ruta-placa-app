@@ -29,6 +29,27 @@ class PicoPlacaCalculator {
     final weekday = date.weekday;
     final holiday = isHoliday(date);
 
+    // ✅ Verificar regla de fin de mes ANTES que cualquier otra
+    if (restriction.endOfMonthAllDigits &&
+        _isLastDayOfMonth(date) &&
+        weekday >= DateTime.monday &&
+        weekday <= DateTime.friday) {
+      // Verificar horario si se pasó time
+      final inTime =
+          time == null ||
+          _isInRestrictionTime(restriction, time, plateOrigin: plateOrigin);
+
+      if (inTime) {
+        return PicoPlacaResult(
+          hasRestriction: true,
+          restrictedPlates: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+          reason: RestrictionReason.endOfMonth,
+          appliesToAll: true,
+          note: 'Último día del mes — aplica para todos',
+        );
+      }
+    }
+
     // Delegar el manejo de festivos según la regla
     if (holiday) {
       return _handleHoliday(
@@ -73,7 +94,7 @@ class PicoPlacaCalculator {
         return const PicoPlacaResult(
           hasRestriction: false,
           restrictedPlates: [],
-          reason: RestrictionReason.holiday,
+          reason: RestrictionReason.holidayFriday,
         );
       case HolidayBehavior.appliesNormal:
         // Armenia taxis: el festivo avanza el ciclo y aplica normal
@@ -113,7 +134,7 @@ class PicoPlacaCalculator {
         return const PicoPlacaResult(
           hasRestriction: false,
           restrictedPlates: [],
-          reason: RestrictionReason.holiday,
+          reason: RestrictionReason.holidayFriday,
         );
     }
   }
@@ -151,7 +172,7 @@ class PicoPlacaCalculator {
       return const PicoPlacaResult(
         hasRestriction: false,
         restrictedPlates: [],
-        reason: RestrictionReason.holiday,
+        reason: RestrictionReason.holidayFriday,
       );
     }
 
@@ -201,6 +222,12 @@ class PicoPlacaCalculator {
   }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
+
+  /// Verifica si es el último día calendario del mes
+  static bool _isLastDayOfMonth(DateTime date) {
+    final lastDay = DateTime(date.year, date.month + 1, 0);
+    return date.day == lastDay.day;
+  }
 
   /// Verifica si el día de la semana está en weekdaysApply
   /// Para fixedWeekly usa el mapa schedule directamente

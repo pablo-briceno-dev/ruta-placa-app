@@ -27,6 +27,11 @@ class VehicleRestriction {
   /// Si está vacío aplica timeRanges para todas las placas
   final Map<PlateOrigin, List<TimeRange>> timeRangesByOrigin;
 
+  /// Si es true, el último día hábil calendario del mes
+  /// aplica restricción para TODOS los dígitos,
+  /// independientemente del scheduleType
+  final bool endOfMonthAllDigits;
+
   const VehicleRestriction({
     required this.scheduleType,
     required this.schedule,
@@ -39,6 +44,7 @@ class VehicleRestriction {
     this.holidayBehavior = HolidayBehavior.noRestriction,
     this.timeRanges = const [],
     this.timeRangesByOrigin = const {},
+    this.endOfMonthAllDigits = false,
   });
 
   bool get hasRestriction =>
@@ -85,6 +91,9 @@ class VehicleRestriction {
 
       case ScheduleType.fixedWeeklyWithRotatingSaturday:
         return _fixedWeeklyWithRotatingSaturdayResult(date);
+
+      case ScheduleType.rotatingWeeklyDailyWithWeekend:
+        return _rotatingWeeklyDailyWithWeekendResult(date);
     }
   }
 
@@ -277,6 +286,54 @@ class VehicleRestriction {
     return PlatesResult(plates: rotation!.rotationCycle[index]);
   }
 
+  // ----- rotating_weekly_daily_with_weekend -----------------
+  PlatesResult _rotatingWeeklyDailyWithWeekendResult(DateTime date) {
+    if (rotation == null) return PlatesResult.empty();
+
+    final weekday = date.weekday;
+
+    // ── Sábado y domingo ────────────────────────────────
+    // Toman el índice del lunes de la SIGUIENTE semana
+    // pero solo un dígito del grupo
+    if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
+      // Lunes de la semana siguiente
+      final daysToNextMonday = weekday == DateTime.saturday ? 2 : 1;
+      final nextMonday = date.add(Duration(days: daysToNextMonday));
+
+      final mondayIndex = _weeklyDailyIndex(nextMonday);
+      final group = rotation!.rotationCycle[mondayIndex];
+
+      if (group.isEmpty) return PlatesResult.empty();
+
+      // Sábado → primer dígito, domingo → segundo dígito
+      if (weekday == DateTime.saturday) {
+        return PlatesResult(plates: [group[0]]);
+      } else {
+        // Si el grupo solo tiene un dígito, domingo no aplica
+        if (group.length < 2) return PlatesResult.empty();
+        return PlatesResult(plates: [group[1]]);
+      }
+    }
+
+    // ── Lunes a viernes → grupo completo ────────────────
+    final index = _weeklyDailyIndex(date);
+    return PlatesResult(plates: rotation!.rotationCycle[index]);
+  }
+
+  /// Mismo cálculo que _rotatingWeeklyDailyIndex
+  /// separado para poder reutilizarlo con nextMonday
+  int _weeklyDailyIndex(DateTime date) {
+    if (rotation == null) return 0;
+    final startMonday = _mondayOf(rotation!.cycleStartDate);
+    final dateMonday = _mondayOf(date);
+    final weeksDiff = dateMonday.difference(startMonday).inDays ~/ 7;
+    if (weeksDiff < 0) return 0;
+    final daysFromMonday = rotation!.weekdaysApply
+        .where((wd) => wd < date.weekday)
+        .length;
+    return (weeksDiff + daysFromMonday) % rotation!.rotationCycle.length;
+  }
+
   // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
@@ -297,6 +354,9 @@ class VehicleRestriction {
         }
         // Sábado → verificar que rotation existe
         return rotation != null;
+      case ScheduleType.rotatingWeeklyDailyWithWeekend:
+        // Aplica todos los días incluyendo fines de semana
+        return true;
     }
   }
 
@@ -319,6 +379,8 @@ class VehicleRestriction {
       'rotating_daily_by_group' => ScheduleType.rotatingDailyByGroup,
       'fixed_weekly_with_rotating_saturday' =>
         ScheduleType.fixedWeeklyWithRotatingSaturday,
+      'rotating_weekly_daily_with_weekend' =>
+        ScheduleType.rotatingWeeklyDailyWithWeekend,
       _ => ScheduleType.fixedWeekly,
     };
 
@@ -386,6 +448,7 @@ class VehicleRestriction {
       holidayBehavior: holidayBehavior,
       timeRanges: timeRanges,
       timeRangesByOrigin: timeRangesByOrigin,
+      endOfMonthAllDigits: (json['endOfMonthAllDigits'] as bool?) ?? false,
     );
   }
 
@@ -396,6 +459,7 @@ class VehicleRestriction {
     morningStart: TimeOfDay(hour: 0, minute: 0),
     morningEnd: TimeOfDay(hour: 0, minute: 0),
     holidayBehavior: HolidayBehavior.noRestriction,
+    endOfMonthAllDigits: false,
   );
 
   // "07:30" → TimeOfDay(hour: 7, minute: 30)

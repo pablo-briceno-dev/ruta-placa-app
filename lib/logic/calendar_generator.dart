@@ -59,11 +59,11 @@ class CalendarGenerator {
         if (picoResult.hasRestriction) {
           colors.add(Colors.red);
         } else if (isSystemColors &&
-            picoResult.reason != RestrictionReason.holiday) {
+            picoResult.reason != RestrictionReason.holidayFriday) {
           for (var i = 0; i < indexesColors.length; i++) {
             colors.add(colorsPlates[indexesColors[i]]);
           }
-        } else if (picoResult.reason == RestrictionReason.holiday) {
+        } else if (picoResult.reason == RestrictionReason.holidayFriday) {
           colors.add(holidayColor);
         } else {
           colors.add(Colors.green);
