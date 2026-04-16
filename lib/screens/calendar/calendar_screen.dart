@@ -10,7 +10,7 @@ import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 import 'package:ruta_placa/screens/calendar/colors_schedule_panel.dart';
 import 'package:ruta_placa/screens/calendar/day_detail_panel.dart';
-import 'package:ruta_placa/widgets/table_calendar_panel.dart';
+import 'package:ruta_placa/widgets/calendar/table_calendar_panel.dart';
 import 'package:ruta_placa/screens/calendar/vehicles_selector_button.dart';
 import 'package:ruta_placa/widgets/city_selector_button_widget.dart';
 import 'package:ruta_placa/widgets/update_icon_widget.dart';
@@ -26,7 +26,6 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
   DateTime _focused = DateTime.now();
   DateTime _selectedDate = DateTime.now();
   Vehicle? selectedVehicle;
-  bool _checked = false;
   bool _colorsScheduleEnabled = true;
 
   @override
@@ -34,10 +33,7 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_checked) {
-        ref.read(rulesProvider.notifier).checkForUpdates();
-        _checked = true;
-      }
+      ref.read(rulesProvider.notifier).checkForUpdates();
     });
   }
 

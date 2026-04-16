@@ -159,14 +159,6 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                         vehicleTypeIndex: _vehicleType.index,
                       );
 
-                      final vehicles = ref.read(vehiclesProvider).vehicles;
-
-                      if (vehicles.isEmpty) {
-                        await ref
-                            .read(vehiclesProvider.notifier)
-                            .setDefault(vehicle.plate);
-                      }
-
                       ref
                           .read(vehiclesProvider.notifier)
                           .add(vehicle);

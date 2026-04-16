@@ -12,13 +12,13 @@ enum DayStatus { free, restricted, holiday, weekend, noData }
 class CalendarDay {
   final DateTime date;
   final DayStatus status;
-  final Color color;
+  final List<Color> colors;
   final List<int> restrictedPlates;
 
   const CalendarDay({
     required this.date,
     required this.status,
-    this.color = Colors.transparent,
+    this.colors = const [Colors.transparent],
     this.restrictedPlates = const [],
   });
 }
@@ -42,8 +42,8 @@ class CalendarGenerator {
       final restriction = cityRule.restrictionFor(vehicleType);
       final plates = restriction.platesForDay(date);
       final vehiclePlates =
-          cityRule.restrictions[VehicleType.particular]?.getPlates() ?? [];
-      final indexColor = findIndexList(vehiclePlates, plates);
+          cityRule.restrictions[vehicleType]?.getPlates() ?? [];
+      final indexesColors = findIndexesByTarget(vehiclePlates, plates);
 
       if (plate != null && plates.isNotEmpty) {
         final picoResult = PicoPlacaCalculator.checkPlate(
@@ -52,6 +52,19 @@ class CalendarGenerator {
           vehicleType: vehicleType,
           date: date,
         );
+        List<Color> colors = [];
+        if (picoResult.hasRestriction) {
+          colors.add(Colors.red);
+        } else if (isSystemColors &&
+            picoResult.reason != RestrictionReason.holiday) {
+          for (var i = 0; i < indexesColors.length; i++) {
+            colors.add(colorsPlates[indexesColors[i]]);
+          }
+        } else if (picoResult.reason == RestrictionReason.holiday) {
+          colors.add(holidayColor);
+        } else {
+          colors.add(Colors.green);
+        }
         result.add(
           CalendarDay(
             date: date,
@@ -59,15 +72,7 @@ class CalendarGenerator {
                 ? DayStatus.restricted
                 : DayStatus.free,
             restrictedPlates: plates,
-            color: picoResult.hasRestriction
-                ? Colors.red
-                : isSystemColors &&
-                      picoResult.reason != RestrictionReason.holiday
-                ? colorsPlates[indexColor]
-                : picoResult.reason == RestrictionReason.holiday ||
-                      picoResult.reason == RestrictionReason.holiday
-                ? holidayColor
-                : Colors.green,
+            colors: colors,
           ),
         );
         continue;
@@ -83,7 +88,7 @@ class CalendarGenerator {
           CalendarDay(
             date: date,
             status: DayStatus.holiday,
-            color: holidayColor,
+            colors: [holidayColor],
           ),
         );
         continue;
@@ -101,9 +106,11 @@ class CalendarGenerator {
           CalendarDay(
             date: date,
             status: DayStatus.free,
-            color: isSystemColors
-                ? colorsPlates[indexColor]
-                : Colors.transparent,
+            colors: indexesColors
+                .map(
+                  (i) => isSystemColors ? colorsPlates[i] : Colors.transparent,
+                )
+                .toList(),
             restrictedPlates: plates,
           ),
         );

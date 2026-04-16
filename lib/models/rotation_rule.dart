@@ -1,3 +1,5 @@
+
+
 class RotationRule {
   // Fecha desde la cual empieza a contar el ciclo
   final DateTime cycleStartDate;
@@ -8,12 +10,18 @@ class RotationRule {
   // Lista de grupos de dígitos que rotan en orden
   // Ej: [[1,2], [3,4], [5,6], [7,8],[9, 0]]
   final List<List<int>> rotationCycle;
+  // Día o días donde se agrupan dígitos
+  final List<int> groupDays;
+  // Cuantos dígitos o index de rotationCycle se agrupan en cada día
+  final int groupDigits;
 
   const RotationRule({
     required this.cycleStartDate,
     required this.cycleLength,
     required this.weekdaysApply,
     required this.rotationCycle,
+    this.groupDays = const [],
+    this.groupDigits = 0,
   });
 
   factory RotationRule.fromJson(Map<String, dynamic> json) {
@@ -25,6 +33,10 @@ class RotationRule {
       rotationCycle: (json['rotationCycle'] as List)
           .map((e) => List<int>.from(e as List))
           .toList(),
+      groupDays: (json['groupDays'] as List? ?? [])
+          .map((e) => e as int)
+          .toList(),
+      groupDigits: json['groupDigits'] ?? 0,
     );
   }
 
@@ -33,5 +45,7 @@ class RotationRule {
     'cycleLengthWeeks': cycleLength,
     'weekdaysApply': weekdaysApply,
     'rotationCycle': rotationCycle,
+    'groupDays': groupDays,
+    'groupDigits': groupDigits,
   };
 }

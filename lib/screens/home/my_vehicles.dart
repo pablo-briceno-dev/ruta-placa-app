@@ -73,14 +73,19 @@ class MyVehicles extends ConsumerWidget {
                   : const SizedBox(),
             ),
             ...vehicles.map((vehicle) {
-              if (defaultVehicle?.plate != vehicle.plate) {
-                return AnimatedOpacity(
-                  duration: const Duration(milliseconds: 300),
-                  opacity: 1,
-                  child: MyVehicleCard(vehicle: vehicle),
-                );
+              if (defaultVehicle?.plate == vehicle.plate) {
+                return const SizedBox();
               }
-              return const SizedBox();
+
+              return AnimatedOpacity(
+                duration: const Duration(milliseconds: 300),
+                opacity: 1,
+                child: MyVehicleCard(
+                  key: ValueKey(vehicle.plate),
+                  vehicle: vehicle,
+                  isDefault: vehicle.isDefault, // ← pasar correctamente
+                ),
+              );
             }),
           ],
         ),

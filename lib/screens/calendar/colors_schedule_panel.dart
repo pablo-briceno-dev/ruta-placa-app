@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ruta_placa/data/colors_plates.dart';
 import 'package:ruta_placa/screens/calendar/digit_legend.dart';
@@ -22,25 +21,23 @@ class ColorsSchedulePanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🔹 Título
+          // Header con switch
           Row(
             children: [
-              Icon(Icons.palette, color: theme.colorScheme.primary),
+              Icon(Icons.palette_outlined, color: scheme.primary),
               const SizedBox(width: 8),
-              const Text(
-                'Sistema de colores',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
+              Text('Sistema de colores', style: theme.textTheme.titleMedium),
               const Spacer(),
               Switch(value: isEnabledSystemColors, onChanged: onChangedSwitch),
             ],
@@ -48,88 +45,79 @@ class ColorsSchedulePanel extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // 🔹 Leyenda
+          // Leyenda de grupos de dígitos
           if (isEnabledSystemColors) ...[
             Wrap(
-              spacing: 24,
-              runSpacing: 10,
-              alignment: WrapAlignment.center,
-              children: plates.asMap().entries.map((e) {
-                final index = e.key;
-                final digits = e.value;
-                final isEqual = listEquals(digits, platesRestriction);
-                final isLastDigit = e.value.contains(int.parse(lastDigitPlate));
+              spacing: 4,
+              runSpacing: 4,
+              alignment: WrapAlignment.start,
+              children: plates.asMap().entries.map((entry) {
+                final index = entry.key;
+                final groupDigits = entry.value;
+                final userDigit = int.tryParse(lastDigitPlate);
 
                 return DigitLegend(
-                  color: (isEqual || isLastDigit)
-                      ? Colors.red
-                      : colorsPlates[index],
-                  digits: digits.join(' - '),
+                  digits: groupDigits, // [2,3] o [1] tal como viene
+                  color: colorsPlates[index], // color del grupo por índice
+                  userDigit: userDigit, // dígito de la placa del usuario
                 );
               }).toList(),
             ),
             const SizedBox(height: 12),
           ],
 
-          // Más información
-          Row(
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.15),
-                  border: Border.all(color: Colors.red, width: 1.5),
-                  borderRadius: BorderRadiusGeometry.circular(5),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text('Con restricción - Para el dígito $lastDigitPlate'),
-            ],
+          // Referencias visuales
+          _LegendRef(
+            color: Colors.red,
+            label: 'Con restricción — dígito $lastDigitPlate',
           ),
 
           if (!isEnabledSystemColors) ...[
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  padding: const EdgeInsets.all(12),
-                  margin: const EdgeInsets.all(5),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withValues(alpha: 0.15),
-                    border: Border.all(color: Colors.green, width: 1.5),
-                    borderRadius: BorderRadiusGeometry.circular(5),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text('Sin restricción - Último dígito $lastDigitPlate'),
-              ],
+            const SizedBox(height: 8),
+            _LegendRef(
+              color: Colors.green,
+              label: 'Sin restricción — dígito $lastDigitPlate',
+              isApplyBackground: false,
             ),
           ],
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Container(
-                width: 30,
-                height: 30,
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.all(5),
-                decoration: BoxDecoration(
-                  color: holidayColor.withValues(alpha: 0.15),
-                  border: Border.all(color: holidayColor, width: 1.5),
-                  borderRadius: BorderRadiusGeometry.circular(5),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text('Días festivos'),
-            ],
-          ),
+
+          const SizedBox(height: 8),
+          _LegendRef(color: holidayColor, label: 'Días festivos'),
         ],
       ),
+    );
+  }
+}
+
+class _LegendRef extends StatelessWidget {
+  final Color color;
+  final String label;
+  final bool isApplyBackground;
+
+  const _LegendRef({
+    required this.color,
+    required this.label,
+    this.isApplyBackground = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: isApplyBackground ? Colors.black : color,
+            border: Border.all(color: color, width: 2),
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+        ),
+      ],
     );
   }
 }

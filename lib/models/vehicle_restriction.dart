@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruta_placa/data/holidays_co.dart' as holidays;
+import 'package:ruta_placa/models/holiday_behavior.dart';
 import 'package:ruta_placa/models/plates_result.dart';
 import 'package:ruta_placa/models/rotation_rule.dart';
 import 'package:ruta_placa/models/schedule_type.dart';
@@ -12,8 +13,8 @@ class VehicleRestriction {
   final TimeOfDay morningEnd;
   final TimeOfDay? afternoonStart;
   final TimeOfDay? afternoonEnd;
-  final String?
-  note; // Nota informativa para mostrar en UI Ej: "Solo en corredores viales principales"
+  final String? note; // Nota informativa para mostrar en UI Ej: "Solo en corredores viales principales"
+  final HolidayBehavior holidayBehavior;
 
   const VehicleRestriction({
     required this.scheduleType,
@@ -24,6 +25,7 @@ class VehicleRestriction {
     this.afternoonStart,
     this.afternoonEnd,
     this.note,
+    this.holidayBehavior = HolidayBehavior.noRestriction
   });
 
   bool get hasRestriction => schedule.isNotEmpty || rotation != null;
@@ -56,11 +58,14 @@ class VehicleRestriction {
       case ScheduleType.rotatingWeeklyDaily:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         final idx = _rotatingWeeklyDailyIndex(date);
-        // return _rotatingWeeklyDailyPlates(date);
         return PlatesResult(plates: rotation!.rotationCycle[idx]);
 
       case ScheduleType.rotatingAlternating:
         return _alternatingResult(date: date, isHoliday: isHoliday);
+
+      case ScheduleType.rotatingDailyByGroup:
+        if (!_weekdayApplies(date)) return PlatesResult.empty();
+        return _rotatingDailyByGroupIndex(date);
     }
   }
 
@@ -182,6 +187,45 @@ class VehicleRestriction {
     return laboralCount % rotation!.rotationCycle.length;
   }
 
+  // ----- rotating_daily_by_group -----------------
+  PlatesResult _rotatingDailyByGroupIndex(DateTime date) {
+    if (rotation == null) return PlatesResult.empty();
+    // Contar días calendario desde cycleStartDate hasta date (inclusive)
+    // Cada día normal avanza 1 posición
+    // Cada domingo avanza 2 posiciones (agrupa actual + siguiente)
+    // Por tanto debemos simular el avance día a día
+    final cycleLen = rotation!.rotationCycle.length;
+    int position = 0;
+    DateTime cursor = rotation!.cycleStartDate;
+
+    while (!_isSameDay(cursor, date)) {
+      if (cursor.isAfter(date)) return PlatesResult.empty();
+      if (rotation!.groupDays.isNotEmpty &&
+          (rotation!.groupDays.contains(cursor.weekday) ||
+              cursor.weekday == DateTime.sunday)) {
+        position =
+            (position + rotation!.groupDigits) % cycleLen; // domingo consume 2
+      } else {
+        position = (position + 1) % cycleLen; // día normal consume 1
+      }
+
+      cursor = cursor.add(const Duration(days: 1));
+    }
+    // En el día actual devolver los dígitos
+    final current = rotation!.rotationCycle[position];
+
+    if (rotation!.groupDays.isNotEmpty &&
+        (rotation!.groupDays.contains(cursor.weekday) ||
+            cursor.weekday == DateTime.sunday)) {
+      // Domingo o día de agrupación: agrupar posición actual + siguiente
+      final next = rotation!
+          .rotationCycle[(position + (rotation!.groupDigits - 1)) % cycleLen];
+      return PlatesResult(plates: [...current, ...next]);
+    }
+
+    return PlatesResult(plates: current);
+  }
+
   // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
@@ -191,6 +235,7 @@ class VehicleRestriction {
       case ScheduleType.rotatingDaily:
       case ScheduleType.rotatingWeeklyDaily:
       case ScheduleType.rotatingAlternating:
+      case ScheduleType.rotatingDailyByGroup:
         // Para rotación: aplica si el weekday está en weekdaysApply
         if (rotation == null) return false;
         return rotation!.weekdaysApply.contains(date.weekday);
@@ -213,6 +258,7 @@ class VehicleRestriction {
       'rotating_daily' => ScheduleType.rotatingDaily,
       'rotating_weekly_daily' => ScheduleType.rotatingWeeklyDaily,
       'rotating_alternating' => ScheduleType.rotatingAlternating,
+      'rotating_daily_by_group' => ScheduleType.rotatingDailyByGroup,
       _ => ScheduleType.fixedWeekly,
     };
 
@@ -231,6 +277,16 @@ class VehicleRestriction {
       );
     }
 
+    // Parsear holidayBehavior del JSON
+    final holidayStr = json['holidayBehavior'] as String? ?? 'no_restriction';
+    final holidayBehavior = switch (holidayStr) {
+      'no_restriction'  => HolidayBehavior.noRestriction,
+      'applies_normal'  => HolidayBehavior.appliesNormal,
+      'custom_bogota'   => HolidayBehavior.customBogota,
+      'applies_to_all'  => HolidayBehavior.appliesToAll,
+      _                 => HolidayBehavior.noRestriction,
+    };
+
     return VehicleRestriction(
       scheduleType: type,
       schedule: schedule,
@@ -244,6 +300,7 @@ class VehicleRestriction {
           ? _parseTime(json['afternoonEnd'])
           : null,
       note: json['note'] as String?,
+      holidayBehavior: holidayBehavior,
     );
   }
 
@@ -253,6 +310,7 @@ class VehicleRestriction {
     schedule: {},
     morningStart: TimeOfDay(hour: 0, minute: 0),
     morningEnd: TimeOfDay(hour: 0, minute: 0),
+    holidayBehavior: HolidayBehavior.noRestriction,
   );
 
   // "07:30" → TimeOfDay(hour: 7, minute: 30)

@@ -42,12 +42,15 @@ class RestrictedDigitsRow extends ConsumerWidget {
       DateFormat("EEE d", 'es_ES').format(date),
     );
     final morningStart =
-        city?.restrictions[vehicleType]?.morningStart ?? TimeOfDay.now();
+        city?.restrictions[vehicle?.vehicleType ?? vehicleType]?.morningStart ??
+        TimeOfDay.now();
     final morningEnd =
-        city?.restrictions[vehicleType]?.morningEnd ??
+        city?.restrictions[vehicle?.vehicleType ?? vehicleType]?.morningEnd ??
         TimeOfDay(hour: date.hour + 6, minute: 0);
-    final afternoonStart = city?.restrictions[vehicleType]?.afternoonStart;
-    final afternoonEnd = city?.restrictions[vehicleType]?.afternoonEnd;
+    final afternoonStart =
+        city?.restrictions[vehicle?.vehicleType ?? vehicleType]?.afternoonStart;
+    final afternoonEnd =
+        city?.restrictions[vehicle?.vehicleType ?? vehicleType]?.afternoonEnd;
 
     return Card(
       child: Container(
@@ -77,7 +80,9 @@ class RestrictedDigitsRow extends ConsumerWidget {
                   final result = PicoPlacaCalculator.checkPlate(
                     cityRule: city ?? cityRuleUtils,
                     plate: digit,
-                    vehicleType: vehicleType, // ← automático desde el modelo
+                    vehicleType:
+                        vehicle?.vehicleType ??
+                        vehicleType, // ← automático desde el modelo
                     date: DateTime.now(),
                   );
                   return Container(

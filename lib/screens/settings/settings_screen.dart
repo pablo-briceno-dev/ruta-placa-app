@@ -422,10 +422,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _refreshRules(BuildContext context) async {
     // Llama al RulesNotifier que ya definimos antes
-    ref.read(rulesProvider.notifier).refresh();
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Actualizando reglas...')));
+    await ref.read(rulesProvider.notifier).refresh();
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Actualizando reglas...')));
+    }
   }
 
   void _showReportDialog(BuildContext context) {

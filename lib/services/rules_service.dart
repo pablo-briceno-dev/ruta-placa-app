@@ -173,27 +173,27 @@ class RulesService {
     debugPrint('RulesService: usando fallback hardcodeado');
     return [
       CityRule(
-        id: 'bogota',
-        name: 'Bogotá',
+        id: 'pasto',
+        name: 'Pasto',
         emoji: '🏙️',
         restrictions: {
           VehicleType.particular: VehicleRestriction(
-            scheduleType: ScheduleType.rotatingWeekly,
+            scheduleType: ScheduleType.rotatingWeeklyDaily,
             schedule: {},
             rotation: RotationRule(
-              cycleStartDate: DateTime(2026, DateTime.january, 5),
+              cycleStartDate: DateTime(2026, DateTime.april, 6),
               cycleLength: 5,
-              weekdaysApply: [1, 3],
+              weekdaysApply: [1, 2, 3, 4, 5],
               rotationCycle: [
-                [1, 2],
-                [3, 4],
-                [5, 6],
-                [7, 8],
-                [9, 0],
+                [0, 1],
+                [2, 3],
+                [4, 5],
+                [6, 7],
+                [8, 9],
               ],
             ),
-            morningStart: const TimeOfDay(hour: 6, minute: 0),
-            morningEnd: const TimeOfDay(hour: 20, minute: 0),
+            morningStart: const TimeOfDay(hour: 7, minute: 30),
+            morningEnd: const TimeOfDay(hour: 19, minute: 0),
           ),
         },
       ),

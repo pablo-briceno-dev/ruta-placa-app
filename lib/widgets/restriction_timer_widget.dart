@@ -45,10 +45,19 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
   void initState() {
     super.initState();
     _updateTime();
+    bool isTodayAll = false;
+    for (final range in widget.ranges) {
+      if (isFullDay(range.start, range.end)) {
+        isTodayAll = true;
+        break;
+      }
+    }
 
-    timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      _updateTime();
-    });
+    if (!isTodayAll) {
+      timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        _updateTime();
+      });
+    }
   }
 
   void _updateTime() {
@@ -78,16 +87,10 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
           Text(
             '${formatTime(context, range.start)} - ${formatTime(context, range.end)}',
           ),
-          Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: theme.textTheme.bodyMedium?.fontSize,
-            ),
-            textAlign: TextAlign.center,
-          ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5),
+            padding: EdgeInsets.symmetric(
+              horizontal: (isFullDay(range.start, range.end) ? 15 : 1),
+            ),
             decoration: BoxDecoration(
               color: widget.isRestricted
                   ? theme.colorScheme.error.withValues(alpha: 0.55)
@@ -95,7 +98,7 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
               borderRadius: BorderRadius.circular(5),
             ),
             child: Text(
-              formatDuration(remaining),
+              label,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: theme.textTheme.bodyMedium?.fontSize,
@@ -103,6 +106,24 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
               textAlign: TextAlign.center,
             ),
           ),
+          if (!isFullDay(range.start, range.end))
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5),
+              decoration: BoxDecoration(
+                color: widget.isRestricted
+                    ? theme.colorScheme.error.withValues(alpha: 0.55)
+                    : theme.chipTheme.selectedColor,
+                borderRadius: BorderRadius.circular(5),
+              ),
+              child: Text(
+                formatDuration(remaining),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: theme.textTheme.bodyMedium?.fontSize,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
         ],
       ),
     );
@@ -137,6 +158,17 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
         );
       }
 
+      if (now.isAfter(start) &&
+          now.isBefore(end) &&
+          isFullDay(range.start, range.end)) {
+        return CurrentState(
+          label: "Todo el día",
+          remaining: end.difference(now),
+          isRestricted: widget.isRestricted,
+          range: range,
+        );
+      }
+
       if (now.isAfter(start) && now.isBefore(end)) {
         return CurrentState(
           label: "Termina en",
@@ -163,5 +195,12 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
       isRestricted: false,
       range: range,
     );
+  }
+
+  bool isFullDay(TimeOfDay start, TimeOfDay end) {
+    return start.hour == 0 &&
+        start.minute == 0 &&
+        end.hour == 23 &&
+        end.minute == 59;
   }
 }

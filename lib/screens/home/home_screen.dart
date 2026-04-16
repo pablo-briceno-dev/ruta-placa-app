@@ -17,17 +17,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  bool _checked = false;
-
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_checked) {
-        ref.read(rulesProvider.notifier).checkForUpdates();
-        _checked = true;
-      }
+      ref.read(rulesProvider.notifier).checkForUpdates();
     });
   }
 

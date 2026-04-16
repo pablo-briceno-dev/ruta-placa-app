@@ -26,7 +26,13 @@ final appRouter = GoRouter(
           builder: (_, _) =>
               const InterceptorScreenWidget(child: RouteScreen()),
         ),
-        GoRoute(path: '/settings', builder: (_, _) => const SettingsScreen()),
+        GoRoute(
+          path: '/settings',
+          builder: (_, _) => const InterceptorScreenWidget(
+            viewAds: false,
+            child: SettingsScreen(),
+          ),
+        ),
       ],
     ),
   ],

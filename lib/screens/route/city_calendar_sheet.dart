@@ -12,7 +12,7 @@ import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 import 'package:ruta_placa/screens/route/legend_item.dart';
-import 'package:ruta_placa/widgets/table_calendar_panel.dart';
+import 'package:ruta_placa/widgets/calendar/table_calendar_panel.dart';
 
 class CityCalendarSheet extends ConsumerStatefulWidget {
   final RouteCity city;
@@ -119,7 +119,11 @@ class _CityCalendarSheetState extends ConsumerState<CityCalendarSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                LegendItem(color: Colors.green, label: 'Libre'),
+                LegendItem(
+                  color: Colors.green,
+                  label: 'Libre',
+                  isApplyBackground: false,
+                ),
                 const SizedBox(width: 16),
                 LegendItem(color: colorScheme.error, label: 'Restricción'),
                 const SizedBox(width: 16),

@@ -59,7 +59,8 @@ class _CitySelectorSheetWidgetState
                   final city = filtered[index];
 
                   return ListTile(
-                    title: Text('${city.emoji} ${city.name}'),
+                    leading: const Icon(Icons.location_city),
+                    title: Text(city.name),
                     onTap: () async {
                       await ref
                           .read(selectedCityProvider.notifier)

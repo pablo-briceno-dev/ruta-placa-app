@@ -9,6 +9,7 @@ import 'package:ruta_placa/screens/route/add_city_sheet.dart';
 import 'package:ruta_placa/screens/route/city_calendar_sheet.dart';
 import 'package:ruta_placa/screens/route/empty_route.dart';
 import 'package:ruta_placa/screens/route/route_city_card.dart';
+import 'package:ruta_placa/widgets/update_icon_widget.dart';
 
 class RouteScreen extends ConsumerStatefulWidget {
   const RouteScreen({super.key});
@@ -21,15 +22,27 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
   bool _cleaning = false;
 
   @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(rulesProvider.notifier).checkForUpdates();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final routeState = ref.watch(routeProvider);
     final rulesState = ref.watch(rulesProvider);
     final vehicle = ref.watch(defaultVehicleProvider);
+    final rules = ref.watch(rulesProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mi Ruta'),
         actions: [
+          if (rules.status == RulesStatus.updateAvailable)
+            const UpdateIconWidget(),
           if (routeState.cities.length > 1)
             IconButton(
               icon: _cleaning

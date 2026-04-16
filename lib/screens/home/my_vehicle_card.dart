@@ -130,22 +130,29 @@ class MyVehicleCard extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: IconButton(
-                          icon: Icon(
-                            isDefault ? Icons.star : Icons.star_border,
-                            size: 30,
-                          ),
-                          color: theme.colorScheme.primaryContainer,
-                          onPressed: () {
-                            if (!isDefault) {
-                              ref
-                                  .read(vehiclesProvider.notifier)
-                                  .setDefault(vehicle.plate);
-                            }
-                          },
+                      child: IconButton(
+                        icon: Icon(
+                          isDefault ? Icons.star : Icons.star_border,
+                          size: 30,
                         ),
+                        color: isDefault
+                            ? theme
+                                  .colorScheme
+                                  .primary // estrella activa = color primario
+                            : theme
+                                  .colorScheme
+                                  .onSurface // estrella inactiva = gris
+                                  .withValues(alpha: 0.4),
+                        onPressed: () {
+                          // Si ya es default no hacer nada
+                          if (isDefault) return;
+                          debugPrint(
+                            'Cambiando vehículo por defecto: ${vehicle.id}',
+                          );
+                          ref
+                              .read(vehiclesProvider.notifier)
+                              .setDefault(vehicle.id!);
+                        },
                       ),
                     ),
                     Expanded(

@@ -179,7 +179,7 @@ class DatabaseService {
     }
   }
 
-  Future<void> setDefaultVehicle(String plate) async {
+  Future<void> setDefaultVehicle(int id) async {
     final database = await db;
     await database.transaction((txn) async {
       // Quitar default a todos
@@ -188,8 +188,8 @@ class DatabaseService {
       await txn.update(
         'vehicles',
         {'is_default': 1},
-        where: 'plate = ?',
-        whereArgs: [plate],
+        where: 'id = ?',
+        whereArgs: [id],
       );
     });
   }

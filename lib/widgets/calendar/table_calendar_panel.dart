@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ruta_placa/logic/calendar_generator.dart';
+import 'package:ruta_placa/widgets/calendar/build_day.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class TableCalendarPanel extends StatelessWidget {
@@ -43,35 +44,11 @@ class TableCalendarPanel extends StatelessWidget {
         onDaySelected: onDaySelected,
         onPageChanged: onPageChanged,
         calendarBuilders: CalendarBuilders(
-          defaultBuilder: (ctx, day, _) {
-            final calDay = calDays.firstWhere(
-              (d) => isSameDay(d.date, day),
-              orElse: () => CalendarDay(date: day, status: DayStatus.noData),
-            );
-
-            final color = calDay.color;
-
-            return Container(
-              margin: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-                border: color != Colors.transparent
-                    ? Border.all(color: color, width: 1.5)
-                    : null,
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                '${day.day}',
-                style: TextStyle(
-                  fontWeight: color != Colors.transparent
-                      ? FontWeight.bold
-                      : FontWeight.normal,
-                  color: color != Colors.transparent ? color : null,
-                ),
-              ),
-            );
-          },
+          defaultBuilder: (ctx, day, _) => BuildDay(day: day, calendarDay: _getCalendarDay(day)),
+          todayBuilder: (ctx, day, _) => BuildDay(day: day, calendarDay: _getCalendarDay(day), isToday: true),
+          selectedBuilder: (ctx, day, _) =>
+              BuildDay(day: day, calendarDay: _getCalendarDay(day), isSelected: true),
+          outsideBuilder: (ctx, day, _) => BuildDay(day: day, calendarDay: _getCalendarDay(day), isOutside: true),
         ),
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
@@ -91,6 +68,13 @@ class TableCalendarPanel extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  CalendarDay _getCalendarDay(DateTime date) {
+    return calDays.firstWhere(
+      (d) => isSameDay(d.date, date),
+      orElse: () => CalendarDay(date: date, status: DayStatus.noData),
     );
   }
 
