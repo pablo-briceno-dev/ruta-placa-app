@@ -124,8 +124,20 @@ class VehicleRestriction {
     // Contar días laborales entre cycleStartDate y date (inclusive)
     while (!_isSameDay(cursor, date)) {
       if (cursor.isAfter(date)) return [];
-      if (_weekdayApplies(cursor)) laboralDays++;
-      cursor = cursor.add(const Duration(days: 1));
+
+      final isWeekday =
+          cursor.weekday >= DateTime.monday &&
+          cursor.weekday <= DateTime.friday;
+      final cursorIsHoliday = holidays.isHoliday(cursor);
+
+      if (isWeekday) {
+        // ✅ Con countsButNoRestriction los festivos SÍ avanzan el ciclo
+        if (!cursorIsHoliday ||
+            holidayBehavior == HolidayBehavior.countsButNoRestriction ||
+            holidayBehavior == HolidayBehavior.appliesNormal) {
+          laboralDays++;
+        }
+      }
     }
 
     final cycleIndex = laboralDays % rotation!.cycleLength;
@@ -332,6 +344,7 @@ class VehicleRestriction {
       'applies_normal' => HolidayBehavior.appliesNormal,
       'custom_bogota' => HolidayBehavior.customBogota,
       'applies_to_all' => HolidayBehavior.appliesToAll,
+      'counts_but_no_restriction' => HolidayBehavior.countsButNoRestriction,
       _ => HolidayBehavior.noRestriction,
     };
     // Parsear timeRanges simples

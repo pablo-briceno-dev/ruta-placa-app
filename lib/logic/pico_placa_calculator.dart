@@ -108,6 +108,13 @@ class PicoPlacaCalculator {
           plate: plate,
           time: time,
         );
+      case HolidayBehavior.countsButNoRestriction:
+        // El festivo cuenta en el ciclo pero no aplica restricción
+        return const PicoPlacaResult(
+          hasRestriction: false,
+          restrictedPlates: [],
+          reason: RestrictionReason.holiday,
+        );
     }
   }
 
