@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/calendar_generator.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
@@ -62,12 +63,14 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
       vehicleType: selectedVehicle?.vehicleType ?? VehicleType.particular,
       plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
       isSystemColors: _colorsScheduleEnabled,
+      plateOrigin: selectedVehicle?.plateOrigin ?? PlateOrigin.any,
     );
     final restricted = PicoPlacaCalculator.checkPlate(
       cityRule: city ?? cityRuleUtils,
       plate: selectedVehicle?.plate ?? defaultVehicle?.plate ?? '',
       vehicleType: selectedVehicle?.vehicleType ?? VehicleType.particular,
       date: DateTime.now(),
+      plateOrigin: vehicle.plateOrigin,
     );
 
     return Scaffold(

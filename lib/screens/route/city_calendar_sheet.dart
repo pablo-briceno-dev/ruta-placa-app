@@ -7,6 +7,7 @@ import 'package:ruta_placa/data/colors_plates.dart';
 import 'package:ruta_placa/logic/calendar_generator.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/city_rule.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/route_city.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
@@ -47,6 +48,7 @@ class _CityCalendarSheetState extends ConsumerState<CityCalendarSheet> {
       vehicleType: widget.vehicle?.vehicleType ?? VehicleType.particular,
       plate: widget.vehicle?.plate ?? defaultVehicle?.plate ?? '',
       isSystemColors: false,
+      plateOrigin: widget.vehicle?.plateOrigin ?? PlateOrigin.any,
     );
     final formatted = capitalizeString(
       DateFormat("EEE d", 'es_ES').format(_selectedDate),
@@ -60,6 +62,7 @@ class _CityCalendarSheetState extends ConsumerState<CityCalendarSheet> {
         _selectedDate.month,
         _selectedDate.day,
       ),
+      plateOrigin: widget.vehicle?.plateOrigin ?? PlateOrigin.any,
     );
 
     return DraggableScrollableSheet(

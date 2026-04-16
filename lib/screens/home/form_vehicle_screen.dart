@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/helpers/app_snackbar.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
@@ -24,6 +25,7 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
 
   String _selectedCity = 'bogota';
   VehicleType _vehicleType = VehicleType.particular;
+  PlateOrigin _plateOrigin = PlateOrigin.any;
 
   String _getCityName(String cityId, RulesState rulesCities) {
     final city = rulesCities.cities.firstWhere((c) => c.id == cityId);
@@ -39,12 +41,16 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
       _aliasController.text = v.alias;
       _selectedCity = v.cityId;
       _vehicleType = VehicleType.values[v.vehicleTypeIndex];
+      _plateOrigin = PlateOrigin.values[v.plateOriginIndex];
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final rulesCities = ref.watch(rulesProvider);
+    final cityRule = rulesCities.cities.firstWhere(
+      (c) => c.id == _selectedCity,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -121,6 +127,31 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                   ),
                 ),
 
+                if (cityRule
+                        .restrictions[_vehicleType]
+                        ?.timeRangesByOrigin
+                        .isNotEmpty ==
+                    true) ...[
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<PlateOrigin>(
+                    initialValue: _plateOrigin,
+                    decoration: const InputDecoration(
+                      labelText: 'Origen de la placa',
+                    ),
+                    items: const [
+                      DropdownMenuItem(
+                        value: PlateOrigin.metropolitan,
+                        child: Text('Área metropolitana'),
+                      ),
+                      DropdownMenuItem(
+                        value: PlateOrigin.nationalOrForeign,
+                        child: Text('Nacional o extranjera'),
+                      ),
+                    ],
+                    onChanged: (v) => setState(() => _plateOrigin = v!),
+                  ),
+                ],
+
                 const SizedBox(height: 16),
 
                 // 🚘 TIPO DE VEHÍCULO
@@ -157,11 +188,10 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                             : _aliasController.text.trim(),
                         cityId: _selectedCity,
                         vehicleTypeIndex: _vehicleType.index,
+                        plateOriginIndex: _plateOrigin.index,
                       );
 
-                      ref
-                          .read(vehiclesProvider.notifier)
-                          .add(vehicle);
+                      ref.read(vehiclesProvider.notifier).add(vehicle);
 
                       if (context.mounted) {
                         AppSnackbar.success(context, 'Vehículo guardado');

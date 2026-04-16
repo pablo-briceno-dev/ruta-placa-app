@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:ruta_placa/data/holidays_co.dart' as holidays;
 import 'package:ruta_placa/models/holiday_behavior.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/plates_result.dart';
 import 'package:ruta_placa/models/rotation_rule.dart';
 import 'package:ruta_placa/models/schedule_type.dart';
+import 'package:ruta_placa/models/time_range.dart';
 
 class VehicleRestriction {
   final ScheduleType scheduleType;
@@ -17,6 +19,14 @@ class VehicleRestriction {
   note; // Nota informativa para mostrar en UI Ej: "Solo en corredores viales principales"
   final HolidayBehavior holidayBehavior;
 
+  /// Franjas horarias — reemplaza morning/afternoon cuando hay 3+
+  /// Si está vacío se usan morningStart/morningEnd como fallback
+  final List<TimeRange> timeRanges;
+
+  /// Franjas distintas por origen de placa
+  /// Si está vacío aplica timeRanges para todas las placas
+  final Map<PlateOrigin, List<TimeRange>> timeRangesByOrigin;
+
   const VehicleRestriction({
     required this.scheduleType,
     required this.schedule,
@@ -27,6 +37,8 @@ class VehicleRestriction {
     this.afternoonEnd,
     this.note,
     this.holidayBehavior = HolidayBehavior.noRestriction,
+    this.timeRanges = const [],
+    this.timeRangesByOrigin = const {},
   });
 
   bool get hasRestriction =>
@@ -322,6 +334,28 @@ class VehicleRestriction {
       'applies_to_all' => HolidayBehavior.appliesToAll,
       _ => HolidayBehavior.noRestriction,
     };
+    // Parsear timeRanges simples
+    final rawRanges = json['timeRanges'] as List<dynamic>? ?? [];
+    final timeRanges = rawRanges
+        .map((r) => TimeRange.fromJson(r as Map<String, dynamic>))
+        .toList();
+
+    // Parsear timeRangesByOrigin
+    final rawByOrigin =
+        json['timeRangesByOrigin'] as Map<String, dynamic>? ?? {};
+    final timeRangesByOrigin = <PlateOrigin, List<TimeRange>>{};
+
+    rawByOrigin.forEach((key, value) {
+      final origin = switch (key) {
+        'metropolitan' => PlateOrigin.metropolitan,
+        'nationalOrForeign' => PlateOrigin.nationalOrForeign,
+        _ => PlateOrigin.any,
+      };
+      final ranges = (value as List)
+          .map((r) => TimeRange.fromJson(r as Map<String, dynamic>))
+          .toList();
+      timeRangesByOrigin[origin] = ranges;
+    });
 
     return VehicleRestriction(
       scheduleType: type,
@@ -337,6 +371,8 @@ class VehicleRestriction {
           : null,
       note: json['note'] as String?,
       holidayBehavior: holidayBehavior,
+      timeRanges: timeRanges,
+      timeRangesByOrigin: timeRangesByOrigin,
     );
   }
 

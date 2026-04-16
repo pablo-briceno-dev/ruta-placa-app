@@ -28,6 +28,7 @@ class RoutePlanner {
         plate: stop.plateNumber,
         vehicleType: stop.vehicleType,
         date: stop.arrivalDate,
+        plateOrigin: stop.plateOrigin,
       );
       return StopResult(
         stop: stop,

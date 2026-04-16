@@ -3,6 +3,7 @@ import 'package:ruta_placa/data/holidays_co.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/holiday_behavior.dart';
 import 'package:ruta_placa/models/pico_placa_result.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/vehicle_restriction.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
@@ -13,6 +14,7 @@ class PicoPlacaCalculator {
     required VehicleType vehicleType, // ← nuevo parámetro
     required DateTime date,
     TimeOfDay? time,
+    PlateOrigin plateOrigin = PlateOrigin.any,
   }) {
     final restriction = cityRule.restrictionFor(vehicleType);
 
@@ -54,6 +56,7 @@ class PicoPlacaCalculator {
       date: date,
       time: time,
       isHoliday: false,
+      plateOrigin: plateOrigin,
     );
   }
 
@@ -161,6 +164,7 @@ class PicoPlacaCalculator {
     required DateTime date,
     required TimeOfDay? time,
     required bool isHoliday,
+    PlateOrigin plateOrigin = PlateOrigin.any,
   }) {
     final result = restriction.platesForDayWithContext(
       date: date,
@@ -176,7 +180,9 @@ class PicoPlacaCalculator {
     }
 
     final lastDigit = _extractLastDigit(plate);
-    final inTime = time == null || _isInRestrictionTime(restriction, time);
+    final inTime =
+        time == null ||
+        _isInRestrictionTime(restriction, time, plateOrigin: plateOrigin);
 
     return PicoPlacaResult(
       hasRestriction: result.plates.contains(lastDigit) && inTime,
@@ -206,8 +212,26 @@ class PicoPlacaCalculator {
 
   static bool _isInRestrictionTime(
     VehicleRestriction restriction,
-    TimeOfDay time,
-  ) {
+    TimeOfDay time, {
+    PlateOrigin plateOrigin = PlateOrigin.any,
+  }) {
+    // 1. Verificar si hay franjas específicas por origen
+    if (restriction.timeRangesByOrigin.isNotEmpty) {
+      final ranges =
+          restriction.timeRangesByOrigin[plateOrigin] ??
+          restriction.timeRangesByOrigin[PlateOrigin.any] ??
+          [];
+      if (ranges.isNotEmpty) {
+        return ranges.any((r) => r.contains(time));
+      }
+    }
+
+    // 2. Verificar timeRanges generales
+    if (restriction.timeRanges.isNotEmpty) {
+      return restriction.timeRanges.any((r) => r.contains(time));
+    }
+
+    // 3. Fallback a morningStart/morningEnd (compatibilidad)
     bool inMorning = _timeBetween(
       time,
       restriction.morningStart,

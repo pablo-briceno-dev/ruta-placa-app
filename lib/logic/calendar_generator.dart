@@ -5,6 +5,7 @@ import 'package:ruta_placa/data/holidays_co.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/pico_placa_result.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
 enum DayStatus { free, restricted, holiday, weekend, noData }
@@ -32,6 +33,7 @@ class CalendarGenerator {
     required VehicleType vehicleType,
     bool isSystemColors = false,
     String? plate, // si se pasa, marca los días que afectan ESA placa
+    PlateOrigin plateOrigin = PlateOrigin.any,
   }) {
     final daysInMonth = DateUtils.getDaysInMonth(year, month);
     final result = <CalendarDay>[];
@@ -51,6 +53,7 @@ class CalendarGenerator {
           plate: plate,
           vehicleType: vehicleType,
           date: date,
+          plateOrigin: plateOrigin,
         );
         List<Color> colors = [];
         if (picoResult.hasRestriction) {

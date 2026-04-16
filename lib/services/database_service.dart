@@ -20,13 +20,20 @@ class DatabaseService {
 
     return openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await _createTables(db);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < 2) {
           await _createVehiclesTable(db);
+        }
+        if (oldVersion < 3) {
+          // Agregar columna a usuarios existentes
+          await db.execute('''
+            ALTER TABLE vehicles
+            ADD COLUMN plate_origin_index INTEGER NOT NULL DEFAULT 0
+          ''');
         }
       },
     );
@@ -59,6 +66,7 @@ class DatabaseService {
         city_id TEXT NOT NULL,
         vehicle_type_index INTEGER NOT NULL DEFAULT 0,
         is_default INTEGER NOT NULL DEFAULT 0,
+        plate_origin_index   INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
       )
     ''');
@@ -146,6 +154,7 @@ class DatabaseService {
       'city_id': vehicle.cityId,
       'vehicle_type_index': vehicle.vehicleTypeIndex,
       'is_default': isDefault,
+      'plate_origin_index': vehicle.plateOriginIndex,
       'created_at': DateTime.now().toIso8601String(),
     }, conflictAlgorithm: ConflictAlgorithm.replace);
     return vehicle.copyWith(id: id, isDefault: isDefault == 1);
@@ -203,6 +212,7 @@ class DatabaseService {
         'alias': vehicle.alias,
         'city_id': vehicle.cityId,
         'vehicle_type_index': vehicle.vehicleTypeIndex,
+        'plate_origin_index': vehicle.plateOriginIndex,
       },
       where: 'id = ?',
       whereArgs: [vehicle.id],

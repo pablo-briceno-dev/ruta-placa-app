@@ -87,6 +87,7 @@ class NotificationService {
           plate: vehicle.plate,
           vehicleType: vehicle.vehicleType,
           date: tomorrow,
+          plateOrigin: vehicle.plateOrigin,
         );
 
         if (result.hasRestriction || result.appliesToAll) {
@@ -116,6 +117,7 @@ class NotificationService {
           plate: vehicle.plate,
           vehicleType: vehicle.vehicleType,
           date: today,
+          plateOrigin: vehicle.plateOrigin,
         );
 
         if (result.hasRestriction || result.appliesToAll) {

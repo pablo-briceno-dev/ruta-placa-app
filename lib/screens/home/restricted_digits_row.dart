@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/core/utils/strings_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/time_range.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
@@ -37,10 +37,12 @@ class RestrictedDigitsRow extends ConsumerWidget {
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: date,
       time: TimeOfDay(hour: date.hour, minute: date.minute),
+      plateOrigin: vehicle?.plateOrigin ?? PlateOrigin.any,
     );
     final formatted = capitalizeString(
       DateFormat("EEE d", 'es_ES').format(date),
     );
+    final effectiveVehicleType = vehicle?.vehicleType ?? vehicleType;
     final morningStart =
         city?.restrictions[vehicle?.vehicleType ?? vehicleType]?.morningStart ??
         TimeOfDay.now();
@@ -84,6 +86,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
                         vehicle?.vehicleType ??
                         vehicleType, // ← automático desde el modelo
                     date: DateTime.now(),
+                    plateOrigin: vehicle?.plateOrigin ?? PlateOrigin.any,
                   );
                   return Container(
                     width: 50,
@@ -110,42 +113,21 @@ class RestrictedDigitsRow extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: resultPlate.hasRestriction
-                          ? theme.colorScheme.error.withValues(alpha: 0.55)
-                          : theme.chipTheme.selectedColor,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '${resultPlate.hasRestriction ? 'Con pico y placa' : 'Sin pico y placa'} ${plate.isEmpty ? '' : ' $plate'}'
-                              .toUpperCase(),
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          resultPlate.reason.shortMessage.toUpperCase(),
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 1),
-                    child: Center(
-                      child: RestrictionTimerWidget(
-                        isRestricted: resultPlate.hasRestriction,
-                        ranges: [
+            Expanded(
+              flex: 1,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: RestrictionTimerWidget(
+                  isRestricted: resultPlate.hasRestriction,
+                  // Rangos principales (para el badge)
+                  ranges:
+                      city
+                              ?.restrictions[effectiveVehicleType]
+                              ?.timeRanges
+                              .isNotEmpty ==
+                          true
+                      ? city!.restrictions[effectiveVehicleType]!.timeRanges
+                      : [
                           TimeRange(start: morningStart, end: morningEnd),
                           if (afternoonStart != null)
                             TimeRange(
@@ -153,11 +135,19 @@ class RestrictedDigitsRow extends ConsumerWidget {
                               end: afternoonEnd!,
                             ),
                         ],
-                      ),
-                    ),
-                  ),
+                  // Rangos por origen (activa el botón del modal)
+                  rangesByOrigin:
+                      city
+                              ?.restrictions[effectiveVehicleType]
+                              ?.timeRangesByOrigin
+                              .isNotEmpty ==
+                          true
+                      ? city!
+                            .restrictions[effectiveVehicleType]!
+                            .timeRangesByOrigin
+                      : null,
                 ),
-              ],
+              ),
             ),
           ],
         ),

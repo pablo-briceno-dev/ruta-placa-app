@@ -86,9 +86,20 @@ class RouteCityCard extends ConsumerWidget {
                     plate: vehicle!.plate,
                     vehicleType: vehicle!.vehicleType,
                     date: day,
+                    plateOrigin: vehicle!.plateOrigin,
                   );
+                  // ✅ Detectar si la ciudad tiene horarios por origen
+                  final restriction = cityRule!.restrictionFor(
+                    vehicle!.vehicleType,
+                  );
+                  final hasMultiOrigin =
+                      restriction.timeRangesByOrigin.length > 1;
                   return Expanded(
-                    child: DayChip(date: day, result: result),
+                    child: DayChip(
+                      date: day,
+                      result: result,
+                      hasMultipleOrigins: hasMultiOrigin,
+                    ),
                   );
                 }).toList(),
               ),

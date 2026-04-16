@@ -1,4 +1,5 @@
 import 'package:home_widget/home_widget.dart';
+import 'package:ruta_placa/core/helpers/digits_label.dart';
 import 'package:ruta_placa/core/utils/date_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/city_rule.dart';
@@ -30,6 +31,7 @@ class WidgetService {
         plate: vehicle.plate,
         vehicleType: vehicle.vehicleType,
         date: date,
+        plateOrigin: vehicle.plateOrigin,
       );
     }).toList();
 
@@ -78,7 +80,7 @@ class WidgetService {
     if (result == null) return 'Sin datos';
     if (result.appliesToAll) return 'Todos';
     if (result.hasRestriction) {
-      return result.restrictedPlates.join('·');
+      return buildDigitsLabel(result.restrictedPlates);
     }
     return 'Libre';
   }

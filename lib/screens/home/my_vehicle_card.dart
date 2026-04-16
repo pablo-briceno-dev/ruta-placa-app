@@ -33,6 +33,7 @@ class MyVehicleCard extends ConsumerWidget {
       vehicleType: vehicle.vehicleType,
       date: DateTime.now(),
       time: TimeOfDay(hour: DateTime.now().hour, minute: DateTime.now().minute),
+      plateOrigin: vehicle.plateOrigin,
     );
 
     return AnimatedContainer(

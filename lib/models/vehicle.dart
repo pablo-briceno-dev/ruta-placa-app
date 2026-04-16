@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
 class Vehicle {
@@ -8,6 +9,7 @@ class Vehicle {
   final String cityId;
   final int vehicleTypeIndex;
   final bool isDefault;
+  final int plateOriginIndex;
 
   Vehicle({
     this.id,
@@ -16,9 +18,12 @@ class Vehicle {
     required this.cityId,
     this.vehicleTypeIndex = 0,
     this.isDefault = false,
+    this.plateOriginIndex = 0,
   });
 
   VehicleType get vehicleType => VehicleType.values[vehicleTypeIndex];
+
+  PlateOrigin get plateOrigin => PlateOrigin.values[plateOriginIndex];
 
   Icon getIcon({required VehicleType vehicleType, Color? color}) {
     switch (vehicleType) {
@@ -48,6 +53,7 @@ class Vehicle {
     String? cityId,
     int? vehicleTypeIndex,
     bool? isDefault,
+    int? plateOriginIndex,
   }) => Vehicle(
     id: id ?? this.id,
     plate: plate ?? this.plate,
@@ -55,6 +61,7 @@ class Vehicle {
     cityId: cityId ?? this.cityId,
     vehicleTypeIndex: vehicleTypeIndex ?? this.vehicleTypeIndex,
     isDefault: isDefault ?? this.isDefault,
+    plateOriginIndex: plateOriginIndex ?? this.plateOriginIndex,
   );
 
   factory Vehicle.fromMap(Map<String, dynamic> map) => Vehicle(
@@ -64,5 +71,6 @@ class Vehicle {
     cityId: map['city_id'] as String,
     vehicleTypeIndex: map['vehicle_type_index'] as int,
     isDefault: (map['is_default'] as int) == 1,
+    plateOriginIndex: (map['plate_origin_index'] as int?) ?? 0,
   );
 }
