@@ -13,7 +13,8 @@ class VehicleRestriction {
   final TimeOfDay morningEnd;
   final TimeOfDay? afternoonStart;
   final TimeOfDay? afternoonEnd;
-  final String? note; // Nota informativa para mostrar en UI Ej: "Solo en corredores viales principales"
+  final String?
+  note; // Nota informativa para mostrar en UI Ej: "Solo en corredores viales principales"
   final HolidayBehavior holidayBehavior;
 
   const VehicleRestriction({
@@ -25,10 +26,13 @@ class VehicleRestriction {
     this.afternoonStart,
     this.afternoonEnd,
     this.note,
-    this.holidayBehavior = HolidayBehavior.noRestriction
+    this.holidayBehavior = HolidayBehavior.noRestriction,
   });
 
-  bool get hasRestriction => schedule.isNotEmpty || rotation != null;
+  bool get hasRestriction =>
+      schedule.isNotEmpty ||
+      rotation != null ||
+      scheduleType == ScheduleType.fixedWeeklyWithRotatingSaturday;
 
   List<List<int>> getPlates() {
     if (schedule.isNotEmpty) return schedule.values.toList();
@@ -66,6 +70,9 @@ class VehicleRestriction {
       case ScheduleType.rotatingDailyByGroup:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         return _rotatingDailyByGroupIndex(date);
+
+      case ScheduleType.fixedWeeklyWithRotatingSaturday:
+        return _fixedWeeklyWithRotatingSaturdayResult(date);
     }
   }
 
@@ -226,6 +233,26 @@ class VehicleRestriction {
     return PlatesResult(plates: current);
   }
 
+  // ----- fixed_weekly_with_rotating_saturday -----------------
+  PlatesResult _fixedWeeklyWithRotatingSaturdayResult(DateTime date) {
+    // Lunes a viernes → schedule fijo
+    if (date.weekday != DateTime.saturday) {
+      if (!schedule.containsKey(date.weekday)) return PlatesResult.empty();
+      return PlatesResult(plates: schedule[date.weekday] ?? []);
+    }
+
+    // Sábado → rotar semanalmente usando rotation
+    if (rotation == null) return PlatesResult.empty();
+
+    final startMonday = _mondayOf(rotation!.cycleStartDate);
+    final dateMonday = _mondayOf(date); // lunes de la semana del sábado
+    final weeksDiff = dateMonday.difference(startMonday).inDays ~/ 7;
+    if (weeksDiff < 0) return PlatesResult.empty();
+
+    final index = weeksDiff % rotation!.rotationCycle.length;
+    return PlatesResult(plates: rotation!.rotationCycle[index]);
+  }
+
   // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
@@ -239,6 +266,13 @@ class VehicleRestriction {
         // Para rotación: aplica si el weekday está en weekdaysApply
         if (rotation == null) return false;
         return rotation!.weekdaysApply.contains(date.weekday);
+      case ScheduleType.fixedWeeklyWithRotatingSaturday:
+        // Lunes a viernes → verificar en schedule
+        if (date.weekday != DateTime.saturday) {
+          return schedule.containsKey(date.weekday);
+        }
+        // Sábado → verificar que rotation existe
+        return rotation != null;
     }
   }
 
@@ -259,6 +293,8 @@ class VehicleRestriction {
       'rotating_weekly_daily' => ScheduleType.rotatingWeeklyDaily,
       'rotating_alternating' => ScheduleType.rotatingAlternating,
       'rotating_daily_by_group' => ScheduleType.rotatingDailyByGroup,
+      'fixed_weekly_with_rotating_saturday' =>
+        ScheduleType.fixedWeeklyWithRotatingSaturday,
       _ => ScheduleType.fixedWeekly,
     };
 
@@ -280,11 +316,11 @@ class VehicleRestriction {
     // Parsear holidayBehavior del JSON
     final holidayStr = json['holidayBehavior'] as String? ?? 'no_restriction';
     final holidayBehavior = switch (holidayStr) {
-      'no_restriction'  => HolidayBehavior.noRestriction,
-      'applies_normal'  => HolidayBehavior.appliesNormal,
-      'custom_bogota'   => HolidayBehavior.customBogota,
-      'applies_to_all'  => HolidayBehavior.appliesToAll,
-      _                 => HolidayBehavior.noRestriction,
+      'no_restriction' => HolidayBehavior.noRestriction,
+      'applies_normal' => HolidayBehavior.appliesNormal,
+      'custom_bogota' => HolidayBehavior.customBogota,
+      'applies_to_all' => HolidayBehavior.appliesToAll,
+      _ => HolidayBehavior.noRestriction,
     };
 
     return VehicleRestriction(
