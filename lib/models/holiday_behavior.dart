@@ -4,4 +4,5 @@ enum HolidayBehavior {
   customBogota, // Festivo aplica solo si cae lunes (Bogotá) y el viernes festivo no aplica pero el domingo sí
   appliesToAll, // Festivo = aplica para TODOS los dígitos
   countsButNoRestriction, // ← nuevo: festivo avanza el ciclo pero no aplica
+  handledByScheduleType, // el scheduleType maneja el festivo
 }

@@ -1,5 +1,3 @@
-
-
 class RotationRule {
   // Fecha desde la cual empieza a contar el ciclo
   final DateTime cycleStartDate;
@@ -14,6 +12,7 @@ class RotationRule {
   final List<int> groupDays;
   // Cuantos dígitos o index de rotationCycle se agrupan en cada día
   final int groupDigits;
+  final int bridgeStartDigit; // dígito inicial del ciclo de puentes
 
   const RotationRule({
     required this.cycleStartDate,
@@ -22,6 +21,7 @@ class RotationRule {
     required this.rotationCycle,
     this.groupDays = const [],
     this.groupDigits = 0,
+    this.bridgeStartDigit = 0,
   });
 
   factory RotationRule.fromJson(Map<String, dynamic> json) {
@@ -37,6 +37,7 @@ class RotationRule {
           .map((e) => e as int)
           .toList(),
       groupDigits: json['groupDigits'] ?? 0,
+      bridgeStartDigit: json['bridgeStartDigit'] as int? ?? 0,
     );
   }
 

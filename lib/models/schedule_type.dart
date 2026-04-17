@@ -7,4 +7,5 @@ enum ScheduleType {
   rotatingDailyByGroup, // rotación por día y agrupación de dígitos en un día (Armenia)
   fixedWeeklyWithRotatingSaturday, // reglas fijas con sábado rotativo
   rotatingWeeklyDailyWithWeekend,
+  isoWeekWeekendWithHolidayBridge,
 }

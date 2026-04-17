@@ -57,6 +57,7 @@ class PicoPlacaCalculator {
         date: date,
         plate: plate,
         time: time,
+        plateOrigin: plateOrigin,
       );
     }
 
@@ -87,6 +88,7 @@ class PicoPlacaCalculator {
     required DateTime date,
     required String plate,
     required TimeOfDay? time,
+    required PlateOrigin plateOrigin,
   }) {
     switch (restriction.holidayBehavior) {
       case HolidayBehavior.noRestriction:
@@ -112,6 +114,7 @@ class PicoPlacaCalculator {
           date: date,
           time: time,
           isHoliday: true,
+          plateOrigin: plateOrigin,
         );
       case HolidayBehavior.appliesToAll:
         // Festivo aplica para todos los dígitos
@@ -135,6 +138,15 @@ class PicoPlacaCalculator {
           hasRestriction: false,
           restrictedPlates: [],
           reason: RestrictionReason.holidayFriday,
+        );
+      case HolidayBehavior.handledByScheduleType:
+        return _evaluateNormalDay(
+          restriction: restriction,
+          plate: plate,
+          date: date,
+          time: time,
+          isHoliday: true,
+          plateOrigin: plateOrigin,
         );
     }
   }

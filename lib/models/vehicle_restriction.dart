@@ -94,6 +94,9 @@ class VehicleRestriction {
 
       case ScheduleType.rotatingWeeklyDailyWithWeekend:
         return _rotatingWeeklyDailyWithWeekendResult(date);
+
+      case ScheduleType.isoWeekWeekendWithHolidayBridge:
+        return _isoWeekWeekendResult(date);
     }
   }
 
@@ -334,6 +337,128 @@ class VehicleRestriction {
     return (weeksDiff + daysFromMonday) % rotation!.rotationCycle.length;
   }
 
+  // ----- iso_week_weekend -----------------
+  PlatesResult _isoWeekWeekendResult(DateTime date) {
+    if (rotation == null) return PlatesResult.empty();
+
+    final weekday = date.weekday;
+
+    // ── Lunes a viernes → no aplica ─────────────────────
+    if (weekday >= DateTime.monday &&
+        weekday <= DateTime.friday &&
+        !holidays.isHoliday(date)) {
+      return PlatesResult.empty();
+    }
+
+    // ── Verificar si es parte de un puente festivo ───────
+    // Un puente = sábado + domingo + lunes festivo
+    // O lunes festivo solo
+    // O viernes festivo + fin de semana (puente largo)
+    final bridgePlates = _getBridgePlates(date);
+    if (bridgePlates != null) {
+      // En puente: restringidos = todos EXCEPTO los que circulan
+      final circulan = bridgePlates;
+      final restringidos = List.generate(
+        10,
+        (i) => i,
+      ).where((d) => !circulan.contains(d)).toList();
+      return PlatesResult(plates: restringidos);
+    }
+
+    // ── Fin de semana normal → ISO week par/impar ────────
+    if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
+      final isoWeek = _isoWeekNumber(date);
+      if (isoWeek.isOdd) {
+        return PlatesResult(plates: [1, 3, 5, 7, 9]); // impares
+      } else {
+        return PlatesResult(plates: [0, 2, 4, 6, 8]); // pares
+      }
+    }
+
+    // ── Festivo solo (sin puente) ────────────────────────
+    // Aplicar ISO week igual que el fin de semana
+    if (holidays.isHoliday(date)) {
+      final isoWeek = _isoWeekNumber(date);
+      if (isoWeek.isOdd) {
+        return PlatesResult(plates: [1, 3, 5, 7, 9]);
+      } else {
+        return PlatesResult(plates: [0, 2, 4, 6, 8]);
+      }
+    }
+
+    return PlatesResult.empty();
+  }
+
+  /// Obtiene los dígitos que CIRCULAN en el puente
+  /// Si la fecha no es parte de un puente, retorna null
+  List<int>? _getBridgePlates(DateTime date) {
+    if (rotation == null) return null;
+
+    // Detectar si la fecha forma parte de un puente:
+    // Sáb-Dom-Lun(festivo) o Vie(festivo)-Sáb-Dom
+    final weekday = date.weekday;
+    DateTime? mondayFestivo;
+
+    if (weekday == DateTime.monday && holidays.isHoliday(date)) {
+      mondayFestivo = date;
+    } else if (weekday == DateTime.sunday) {
+      final nextMonday = date.add(const Duration(days: 1));
+      if (holidays.isHoliday(nextMonday)) {
+        mondayFestivo = nextMonday;
+      }
+    } else if (weekday == DateTime.saturday) {
+      final nextMonday = date.add(const Duration(days: 2));
+      if (holidays.isHoliday(nextMonday)) {
+        mondayFestivo = nextMonday;
+      }
+    }
+
+    if (mondayFestivo == null) return null;
+
+    // Calcular qué número de puente es este
+    // desde el cycleStartDate
+    final bridgeIndex = _bridgeIndexFor(mondayFestivo);
+    if (bridgeIndex < 0) return null;
+
+    // Los dígitos que circulan avanzan 3 cada puente
+    // startDigit = rotation!.bridgeStartDigit (del JSON)
+    final startDigit = rotation!.bridgeStartDigit; // ej: 6 para abr-2026
+    final startPosition = startDigit;
+
+    final position = (startPosition + bridgeIndex * 3) % 10;
+    return [position % 10, (position + 1) % 10, (position + 2) % 10];
+  }
+
+  /// Cuenta cuántos lunes festivos hay entre
+  /// cycleStartDate y el lunes festivo dado
+  int _bridgeIndexFor(DateTime mondayFestivo) {
+    if (rotation?.cycleStartDate == null) return -1;
+
+    int count = 0;
+    DateTime cursor = rotation!.cycleStartDate;
+
+    while (cursor.isBefore(mondayFestivo)) {
+      if (cursor.weekday == DateTime.monday && holidays.isHoliday(cursor)) {
+        count++;
+      }
+      cursor = cursor.add(const Duration(days: 1));
+    }
+
+    // El índice 0 es el cycleStartDate mismo
+    return count;
+  }
+
+  /// Calcula el número de semana ISO
+  int _isoWeekNumber(DateTime date) {
+    // Semana ISO: la semana que contiene el primer jueves del año
+    final thursday = date.add(Duration(days: DateTime.thursday - date.weekday));
+    final firstDayOfYear = DateTime(thursday.year, 1, 1);
+    final firstThursday = firstDayOfYear.add(
+      Duration(days: (DateTime.thursday - firstDayOfYear.weekday + 7) % 7),
+    );
+    return ((thursday.difference(firstThursday).inDays) ~/ 7) + 1;
+  }
+
   // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
@@ -344,6 +469,7 @@ class VehicleRestriction {
       case ScheduleType.rotatingWeeklyDaily:
       case ScheduleType.rotatingAlternating:
       case ScheduleType.rotatingDailyByGroup:
+      case ScheduleType.isoWeekWeekendWithHolidayBridge:
         // Para rotación: aplica si el weekday está en weekdaysApply
         if (rotation == null) return false;
         return rotation!.weekdaysApply.contains(date.weekday);
@@ -407,6 +533,7 @@ class VehicleRestriction {
       'custom_bogota' => HolidayBehavior.customBogota,
       'applies_to_all' => HolidayBehavior.appliesToAll,
       'counts_but_no_restriction' => HolidayBehavior.countsButNoRestriction,
+      'handled_by_schedule_type'    => HolidayBehavior.handledByScheduleType,
       _ => HolidayBehavior.noRestriction,
     };
     // Parsear timeRanges simples
