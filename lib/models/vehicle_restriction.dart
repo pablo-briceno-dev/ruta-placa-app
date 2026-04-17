@@ -71,38 +71,31 @@ class VehicleRestriction {
       case ScheduleType.fixedWeekly:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         return PlatesResult(plates: schedule[date.weekday] ?? []);
-
       case ScheduleType.rotatingWeekly:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         return PlatesResult(plates: _rotatingWeeklyPlates(date));
-
       case ScheduleType.rotatingDaily:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         return PlatesResult(plates: _rotatingDailyPlates(date));
-
       case ScheduleType.rotatingWeeklyDaily:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         final idx = _rotatingWeeklyDailyIndex(date);
         return PlatesResult(plates: rotation!.rotationCycle[idx]);
-
       case ScheduleType.rotatingAlternating:
         return _alternatingResult(date: date, isHoliday: isHoliday);
-
       case ScheduleType.rotatingDailyByGroup:
         if (!_weekdayApplies(date)) return PlatesResult.empty();
         return _rotatingDailyByGroupIndex(date);
-
       case ScheduleType.fixedWeeklyWithRotatingSaturday:
         return _fixedWeeklyWithRotatingSaturdayResult(date);
-
       case ScheduleType.rotatingWeeklyDailyWithWeekend:
         return _rotatingWeeklyDailyWithWeekendResult(date);
-
       case ScheduleType.isoWeekWeekendWithHolidayBridge:
         return _isoWeekWeekendResult(date);
-
       case ScheduleType.rotatingLTJWithWeekendSplit:
         return _rotatingLTJWithWeekendSplitResult(date);
+      case ScheduleType.alternatingDailyMondayRepeatsSunday:
+        return _alternatingDailyMondayRepeatsSundayResult(date);
     }
   }
 
@@ -521,6 +514,23 @@ class VehicleRestriction {
     }
   }
 
+  // ----- alternating_daily_monday_repeats_sunday -----------------
+  PlatesResult _alternatingDailyMondayRepeatsSundayResult(DateTime date) {
+    if (rotation == null) return PlatesResult.empty();
+
+    // El lunes siempre usa el valor del domingo anterior
+    final effectiveDate = date.weekday == DateTime.monday
+        ? date.subtract(const Duration(days: 1))
+        : date;
+
+    final diffDays = effectiveDate.difference(rotation!.cycleStartDate).inDays;
+
+    // 0 = impar, 1 = par
+    final isPar = diffDays % 2 != 0;
+
+    return PlatesResult(plates: isPar ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9]);
+  }
+
   // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
@@ -547,6 +557,8 @@ class VehicleRestriction {
         return true;
       case ScheduleType.rotatingLTJWithWeekendSplit:
         return date.weekday != DateTime.sunday;
+      case ScheduleType.alternatingDailyMondayRepeatsSunday:
+        return true; // aplica todos los días
     }
   }
 
@@ -573,6 +585,8 @@ class VehicleRestriction {
         ScheduleType.rotatingWeeklyDailyWithWeekend,
       'rotating_ltj_with_weekend_split' =>
         ScheduleType.rotatingLTJWithWeekendSplit,
+      'alternating_daily_monday_repeats_sunday' =>
+        ScheduleType.alternatingDailyMondayRepeatsSunday,
       _ => ScheduleType.fixedWeekly,
     };
 

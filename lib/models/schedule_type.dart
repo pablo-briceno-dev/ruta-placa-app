@@ -9,4 +9,5 @@ enum ScheduleType {
   rotatingWeeklyDailyWithWeekend,
   isoWeekWeekendWithHolidayBridge,
   rotatingLTJWithWeekendSplit, // L-J grupo, V-S split, D no aplica
+  alternatingDailyMondayRepeatsSunday,
 }
