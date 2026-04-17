@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/helpers/restriction_reason_ext.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
+import 'package:ruta_placa/models/pico_placa_result.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
@@ -122,6 +123,41 @@ class MyVehicleCard extends ConsumerWidget {
                       resultPlate.reason.shortMessage.toUpperCase(),
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
+                    if (resultPlate.reason == RestrictionReason.comingSoon)
+                      Container(
+                        margin: const EdgeInsets.only(top: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: Colors.amber.shade600,
+                            width: 0.5,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.schedule_outlined,
+                              size: 12,
+                              color: Colors.amber.shade700,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Próximamente',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.amber.shade800,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -147,9 +183,6 @@ class MyVehicleCard extends ConsumerWidget {
                         onPressed: () {
                           // Si ya es default no hacer nada
                           if (isDefault) return;
-                          debugPrint(
-                            'Cambiando vehículo por defecto: ${vehicle.id}',
-                          );
                           ref
                               .read(vehiclesProvider.notifier)
                               .setDefault(vehicle.id!);

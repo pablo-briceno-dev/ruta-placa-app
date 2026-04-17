@@ -8,4 +8,5 @@ enum ScheduleType {
   fixedWeeklyWithRotatingSaturday, // reglas fijas con sábado rotativo
   rotatingWeeklyDailyWithWeekend,
   isoWeekWeekendWithHolidayBridge,
+  rotatingLTJWithWeekendSplit, // L-J grupo, V-S split, D no aplica
 }

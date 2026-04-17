@@ -3,6 +3,7 @@ import 'package:ruta_placa/data/holidays_co.dart' as holidays;
 import 'package:ruta_placa/models/holiday_behavior.dart';
 import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/plates_result.dart';
+import 'package:ruta_placa/models/restriction_status.dart';
 import 'package:ruta_placa/models/rotation_rule.dart';
 import 'package:ruta_placa/models/schedule_type.dart';
 import 'package:ruta_placa/models/time_range.dart';
@@ -31,6 +32,7 @@ class VehicleRestriction {
   /// aplica restricción para TODOS los dígitos,
   /// independientemente del scheduleType
   final bool endOfMonthAllDigits;
+  final RestrictionStatus status;
 
   const VehicleRestriction({
     required this.scheduleType,
@@ -45,6 +47,7 @@ class VehicleRestriction {
     this.timeRanges = const [],
     this.timeRangesByOrigin = const {},
     this.endOfMonthAllDigits = false,
+    this.status = RestrictionStatus.active,
   });
 
   bool get hasRestriction =>
@@ -97,6 +100,9 @@ class VehicleRestriction {
 
       case ScheduleType.isoWeekWeekendWithHolidayBridge:
         return _isoWeekWeekendResult(date);
+
+      case ScheduleType.rotatingLTJWithWeekendSplit:
+        return _rotatingLTJWithWeekendSplitResult(date);
     }
   }
 
@@ -459,6 +465,62 @@ class VehicleRestriction {
     return ((thursday.difference(firstThursday).inDays) ~/ 7) + 1;
   }
 
+  // ----- rotating_ltj_with_weekend_split -----------------
+  PlatesResult _rotatingLTJWithWeekendSplitResult(DateTime date) {
+    if (rotation == null) return PlatesResult.empty();
+
+    final weekday = date.weekday;
+    final cycleLen = rotation!.rotationCycle.length;
+
+    // Domingo → no aplica
+    if (weekday == DateTime.sunday) return PlatesResult.empty();
+
+    // Calcular el lunes de esta semana
+    final mondayOfWeek = _mondayOf(date);
+    final startMonday = _mondayOf(rotation!.cycleStartDate);
+    final weekIndex = mondayOfWeek.difference(startMonday).inDays ~/ 7;
+
+    // Posición del lunes de esta semana
+    // Avanza 4 posiciones por semana (lunes repite vie/sáb anterior)
+    final mondayPos = ((weekIndex * 4) % cycleLen + cycleLen) % cycleLen;
+
+    switch (weekday) {
+      case DateTime.monday:
+        // Lunes repite la posición del vie/sáb → mondayPos
+        return PlatesResult(plates: rotation!.rotationCycle[mondayPos]);
+
+      case DateTime.tuesday:
+        final pos = (mondayPos + 1) % cycleLen;
+        return PlatesResult(plates: rotation!.rotationCycle[pos]);
+
+      case DateTime.wednesday:
+        final pos = (mondayPos + 2) % cycleLen;
+        return PlatesResult(plates: rotation!.rotationCycle[pos]);
+
+      case DateTime.thursday:
+        final pos = (mondayPos + 3) % cycleLen;
+        return PlatesResult(plates: rotation!.rotationCycle[pos]);
+
+      case DateTime.friday:
+        // Viernes → primer dígito de la posición del jueves + 1
+        final pos = (mondayPos + 4) % cycleLen;
+        final group = rotation!.rotationCycle[pos];
+        if (group.isEmpty) return PlatesResult.empty();
+        return PlatesResult(plates: [group[0]]);
+
+      case DateTime.saturday:
+        // Sábado → segundo dígito de la misma posición del viernes
+        // Incluso si el viernes fue festivo
+        final pos = (mondayPos + 4) % cycleLen;
+        final group = rotation!.rotationCycle[pos];
+        if (group.length < 2) return PlatesResult.empty();
+        return PlatesResult(plates: [group[1]]);
+
+      default:
+        return PlatesResult.empty();
+    }
+  }
+
   // ----- Helpers -----------------
   bool _weekdayApplies(DateTime date) {
     switch (scheduleType) {
@@ -483,6 +545,8 @@ class VehicleRestriction {
       case ScheduleType.rotatingWeeklyDailyWithWeekend:
         // Aplica todos los días incluyendo fines de semana
         return true;
+      case ScheduleType.rotatingLTJWithWeekendSplit:
+        return date.weekday != DateTime.sunday;
     }
   }
 
@@ -507,6 +571,8 @@ class VehicleRestriction {
         ScheduleType.fixedWeeklyWithRotatingSaturday,
       'rotating_weekly_daily_with_weekend' =>
         ScheduleType.rotatingWeeklyDailyWithWeekend,
+      'rotating_ltj_with_weekend_split' =>
+        ScheduleType.rotatingLTJWithWeekendSplit,
       _ => ScheduleType.fixedWeekly,
     };
 
@@ -533,7 +599,7 @@ class VehicleRestriction {
       'custom_bogota' => HolidayBehavior.customBogota,
       'applies_to_all' => HolidayBehavior.appliesToAll,
       'counts_but_no_restriction' => HolidayBehavior.countsButNoRestriction,
-      'handled_by_schedule_type'    => HolidayBehavior.handledByScheduleType,
+      'handled_by_schedule_type' => HolidayBehavior.handledByScheduleType,
       _ => HolidayBehavior.noRestriction,
     };
     // Parsear timeRanges simples
@@ -558,6 +624,12 @@ class VehicleRestriction {
           .toList();
       timeRangesByOrigin[origin] = ranges;
     });
+    final statusStr = json['status'] as String? ?? 'active';
+    final status = switch (statusStr) {
+      'coming_soon' => RestrictionStatus.comingSoon,
+      'unavailable' => RestrictionStatus.unavailable,
+      _ => RestrictionStatus.active,
+    };
 
     return VehicleRestriction(
       scheduleType: type,
@@ -576,6 +648,7 @@ class VehicleRestriction {
       timeRanges: timeRanges,
       timeRangesByOrigin: timeRangesByOrigin,
       endOfMonthAllDigits: (json['endOfMonthAllDigits'] as bool?) ?? false,
+      status: status,
     );
   }
 
@@ -587,6 +660,7 @@ class VehicleRestriction {
     morningEnd: TimeOfDay(hour: 0, minute: 0),
     holidayBehavior: HolidayBehavior.noRestriction,
     endOfMonthAllDigits: false,
+    status: RestrictionStatus.unavailable,
   );
 
   // "07:30" → TimeOfDay(hour: 7, minute: 30)

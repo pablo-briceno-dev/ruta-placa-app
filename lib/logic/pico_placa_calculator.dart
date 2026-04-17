@@ -4,6 +4,7 @@ import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/holiday_behavior.dart';
 import 'package:ruta_placa/models/pico_placa_result.dart';
 import 'package:ruta_placa/models/plate_origin.dart';
+import 'package:ruta_placa/models/restriction_status.dart';
 import 'package:ruta_placa/models/vehicle_restriction.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
@@ -17,6 +18,17 @@ class PicoPlacaCalculator {
     PlateOrigin plateOrigin = PlateOrigin.any,
   }) {
     final restriction = cityRule.restrictionFor(vehicleType);
+
+    if (restriction.status != RestrictionStatus.active) {
+      return PicoPlacaResult(
+        hasRestriction: false,
+        restrictedPlates: [],
+        reason: restriction.status == RestrictionStatus.comingSoon
+            ? RestrictionReason.comingSoon
+            : RestrictionReason.unavailable,
+        note: restriction.note,
+      );
+    }
 
     if (!restriction.hasRestriction) {
       return const PicoPlacaResult(

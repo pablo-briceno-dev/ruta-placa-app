@@ -8,6 +8,8 @@ extension RestrictionReasonExt on RestrictionReason {
     RestrictionReason.holidayFriday => 'Sin restricción',
     RestrictionReason.weekend => 'Fin de semana',
     RestrictionReason.noRule => 'Sin regla',
-    RestrictionReason.endOfMonth => 'Fin de mes', // ← nuevo
+    RestrictionReason.endOfMonth => 'Fin de mes',
+    RestrictionReason.comingSoon => 'Próximamente',
+    RestrictionReason.unavailable => 'No aplica',
   };
 }

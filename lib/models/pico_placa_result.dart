@@ -6,6 +6,8 @@ enum RestrictionReason {
   weekend, // fin de semana normal — no aplica
   noRule, // no hay regla para este tipo de vehículo
   endOfMonth,
+  comingSoon,
+  unavailable,
 }
 
 class PicoPlacaResult {
