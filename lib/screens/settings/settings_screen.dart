@@ -167,7 +167,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          notifState.dayBeforeTimeFormatted,
+                          notifState.dayBeforeTimeFormatted(
+                            MediaQuery.alwaysUse24HourFormatOf(context),
+                          ),
                           style: textTheme.titleSmall?.copyWith(
                             color: colorScheme.primary,
                           ),
@@ -355,7 +357,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               vertical: 3,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.15),
+                              color: Colors.green.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(color: Colors.green.shade600),
                             ),

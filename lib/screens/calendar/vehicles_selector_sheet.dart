@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/core/utils/default_models_utils.dart';
+import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
@@ -22,6 +23,7 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
   final _plateController = TextEditingController();
   VehicleType vehicleType = VehicleType.particular;
   String? plateError;
+  PlateOrigin plateOrigin = PlateOrigin.any;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
         )
         .toList();
     final selectedCity = ref.watch(selectedCityProvider);
-    final city = ref.watch(cityByIdProvider(selectedCity));
+    final cityRule = ref.watch(cityByIdProvider(selectedCity));
     final plateRegex = RegExp(
       r'^[A-Z]{3}-?\d{2}[A-Z0-9]$',
       caseSensitive: false,
@@ -158,6 +160,33 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
                       ),
                     ),
 
+                    if (cityRule
+                            ?.restrictions[vehicleType]
+                            ?.timeRangesByOrigin
+                            .isNotEmpty ==
+                        true) ...[
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<PlateOrigin>(
+                        initialValue: plateOrigin,
+                        decoration: const InputDecoration(
+                          labelText: 'Origen de la placa',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: PlateOrigin.metropolitan,
+                            child: Text('Área metropolitana o de esta ciudad'),
+                          ),
+                          DropdownMenuItem(
+                            value: PlateOrigin.nationalOrForeign,
+                            child: Text(
+                              'Nacional - extranjera - fuera de esta ciudad',
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) => setState(() => plateOrigin = v!),
+                      ),
+                    ],
+
                     const SizedBox(height: 12),
 
                     ElevatedButton.icon(
@@ -170,7 +199,7 @@ class _VehiclesSelectorSheetState extends ConsumerState<VehiclesSelectorSheet> {
                           plate: plate,
                           alias: 'Consultando: $plate',
                           vehicleTypeIndex: vehicleType.index,
-                          cityId: city?.id ?? cityRuleUtils.id,
+                          cityId: cityRule?.id ?? cityRuleUtils.id,
                         );
 
                         Navigator.pop(context, newVehicle);

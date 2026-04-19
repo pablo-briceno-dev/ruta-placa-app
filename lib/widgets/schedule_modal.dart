@@ -136,6 +136,7 @@ class _RangeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final use24h = MediaQuery.alwaysUse24HourFormatOf(context);
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final now = DateTime.now();
@@ -205,7 +206,7 @@ class _RangeRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${_fmtTime(range.start)} — ${_fmtTime(range.end)}',
+                  '${_fmtTime(range.start, use24h)} — ${_fmtTime(range.end, use24h)}',
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w500,
                     color: isPast
@@ -264,7 +265,11 @@ class _RangeRow extends StatelessWidget {
     return '${s}s';
   }
 
-  String _fmtTime(TimeOfDay t) {
+  String _fmtTime(TimeOfDay t, bool use24h) {
+    if (use24h) {
+      return '${t.hour.toString().padLeft(2, '0')}:'
+          '${t.minute.toString().padLeft(2, '0')}';
+    }
     final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
     final m = t.minute.toString().padLeft(2, '0');
     final pm = t.period == DayPeriod.pm ? 'pm' : 'am';

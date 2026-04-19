@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:ruta_placa/core/utils/time_format_utils.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NotificationSettings {
@@ -39,9 +41,10 @@ class NotificationSettings {
     enabledVehicleIds: enabledVehicleIds ?? this.enabledVehicleIds,
   );
 
-  String get dayBeforeTimeFormatted =>
-      '${dayBeforeHour.toString().padLeft(2, '0')}:'
-      '${dayBeforeMinute.toString().padLeft(2, '0')}';
+  String dayBeforeTimeFormatted (bool use24h) => formatTimeOfDayRaw(
+    TimeOfDay(hour: dayBeforeHour, minute: dayBeforeMinute),
+    use24h: use24h
+  );
 }
 
 final notificationSettingsProvider =

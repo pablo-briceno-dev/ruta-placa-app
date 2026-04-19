@@ -141,6 +141,7 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
   @override
   Widget build(BuildContext context) {
     if (_state == null) return const SizedBox.shrink();
+    final use24h = MediaQuery.alwaysUse24HourFormatOf(context);
     final s = _state!;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
@@ -217,8 +218,8 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
                   s.status == _TimerStatus.upcoming)
                 Text(
                   s.status == _TimerStatus.active
-                      ? 'hasta las ${_formatTime(s.currentRange.end)}'
-                      : 'a las ${_formatTime(s.currentRange.start)}',
+                      ? 'hasta las ${_fmt(s.currentRange.end, use24h)}'
+                      : 'a las ${_fmt(s.currentRange.start, use24h)}',
                   style: TextStyle(
                     fontSize: 10,
                     color: badgeText.withValues(alpha: 0.7),
@@ -240,8 +241,8 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
               Text(
                 s.status == _TimerStatus.free
                     ? 'Sin restricción hoy'
-                    : '${_formatTime(s.currentRange.start)}'
-                          ' — ${_formatTime(s.currentRange.end)}',
+                    : '${_fmt(s.currentRange.start, use24h)}'
+                          ' — ${_fmt(s.currentRange.end, use24h)}',
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w500,
                 ),
@@ -267,7 +268,7 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
                   ),
                   Expanded(
                     child: Text(
-                      _statusSubtitle(s),
+                      _statusSubtitle(s, use24h),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: s.status == _TimerStatus.active
                             ? scheme.error
@@ -311,13 +312,26 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
     );
   }
 
-  String _statusSubtitle(_TimerState s) {
+  // ── Método de formato con flag ────────────────────────────────
+  String _fmt(TimeOfDay t, bool use24h) {
+    if (use24h) {
+      final h = t.hour.toString().padLeft(2, '0');
+      final m = t.minute.toString().padLeft(2, '0');
+      return '$h:$m';
+    }
+    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
+    final m = t.minute.toString().padLeft(2, '0');
+    final pm = t.period == DayPeriod.pm ? 'pm' : 'am';
+    return '$h:$m $pm';
+  }
+
+  String _statusSubtitle(_TimerState s, bool use24h) {
     switch (s.status) {
       case _TimerStatus.active:
         return 'Restricción activa ahora';
       case _TimerStatus.upcoming:
         return s.nextRange != null
-            ? 'Próximo: ${_formatTime(s.nextRange!.start)}'
+            ? 'Próximo: ${_fmt(s.nextRange!.start, use24h)}'
             : 'Sin más franjas hoy';
       case _TimerStatus.allDay:
         return 'Aplica todo el día';
@@ -346,12 +360,5 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
     if (h > 0) return '${h}h ${m}m';
     if (m > 0) return '${m}m ${s}s';
     return '${s}s';
-  }
-
-  String _formatTime(TimeOfDay t) {
-    final h = t.hourOfPeriod == 0 ? 12 : t.hourOfPeriod;
-    final m = t.minute.toString().padLeft(2, '0');
-    final pm = t.period == DayPeriod.pm ? 'pm' : 'am';
-    return '$h:$m $pm';
   }
 }
