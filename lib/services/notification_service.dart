@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -72,14 +73,14 @@ class NotificationService {
 
     for (final vehicle in vehicles) {
       if (!settings.isVehicleEnabled(vehicle.id!)) {
-        debugPrint('   ⏭️ Saltado — vehículo deshabilitado');
+        _log('   ⏭️ Saltado — vehículo deshabilitado');
         continue;
       }
 
       final cityRule = rulesReader.getCity(vehicle.cityId);
 
       if (cityRule == null) {
-        debugPrint('   ⏭️ Saltado — ciudad no encontrada');
+        _log('   ⏭️ Saltado — ciudad no encontrada');
         continue;
       }
 
@@ -111,7 +112,7 @@ class NotificationService {
             );
             scheduled++;
           } else {
-            debugPrint('   ⏭️ Saltado — la hora ya pasó hoy');
+            _log('   ⏭️ Saltado — la hora ya pasó hoy');
           }
         }
       }
@@ -119,9 +120,7 @@ class NotificationService {
       // ... mismo para sameDayEnabled
     }
 
-    debugPrint(
-      '✅ scheduleAll completado — $scheduled notificaciones programadas',
-    );
+    _log('✅ scheduleAll completado — $scheduled notificaciones programadas');
   }
 
   Future<void> _schedule({
@@ -141,7 +140,7 @@ class NotificationService {
 
     final scheduled = tz.TZDateTime.from(time, tz.local);
 
-    debugPrint('  ➕ Programando #$id "$title" para $scheduled');
+    _log('  ➕ Programando #$id "$title" para $scheduled');
 
     // ✅ title y body ahora se pasan correctamente
     await _plugin.zonedSchedule(
@@ -235,5 +234,9 @@ class NotificationService {
         ),
       ),
     );
+  }
+
+  void _log(String msg) {
+    if (kDebugMode) debugPrint(msg);
   }
 }
