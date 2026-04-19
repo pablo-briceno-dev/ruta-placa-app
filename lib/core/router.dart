@@ -3,15 +3,19 @@ import 'package:ruta_placa/screens/calendar/calendar_screen.dart';
 import 'package:ruta_placa/screens/home/home_screen.dart';
 import 'package:ruta_placa/screens/route/route_screen.dart';
 import 'package:ruta_placa/screens/settings/settings_screen.dart';
+import 'package:ruta_placa/screens/splash/no_data_screen.dart';
+import 'package:ruta_placa/screens/splash/splash_screen.dart';
 import 'package:ruta_placa/widgets/interceptor_screen_widget.dart';
 import 'package:ruta_placa/widgets/main_shell_widget.dart';
 
 final appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: '/splash',
   routes: [
     ShellRoute(
       builder: (context, state, child) => MainShellWidget(child: child),
       routes: [
+        GoRoute(path: '/splash', builder: (_, _) => const SplashScreen()),
+        GoRoute(path: '/no-data', builder: (_, __) => const NoDataScreen()),
         GoRoute(
           path: '/',
           builder: (_, _) => const InterceptorScreenWidget(child: HomeScreen()),

@@ -70,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               textAlign: TextAlign.start,
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-            MyVehicles(),
+            Expanded(child: MyVehicles()),
           ],
         ),
       ),

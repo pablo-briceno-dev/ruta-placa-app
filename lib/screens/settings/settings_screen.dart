@@ -327,20 +327,63 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     'Sin datos disponibles',
               ),
               const Divider(height: 1),
-              ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                leading: Icon(
-                  Icons.refresh_outlined,
-                  color: colorScheme.onSurface.withValues(alpha: 0.6),
-                  size: 20,
-                ),
-                title: Text('Actualizar reglas', style: textTheme.bodyMedium),
-                trailing: Icon(
-                  Icons.chevron_right,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4),
-                  size: 18,
-                ),
-                onTap: () => _refreshRules(context),
+              Consumer(
+                builder: (context, ref, _) {
+                  final status = ref.watch(rulesProvider).status;
+                  final isLoading =
+                      status == RulesStatus.downloading ||
+                      status == RulesStatus.loading;
+
+                  return ListTile(
+                    leading: isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.sync),
+                    title: const Text('Actualizar reglas'),
+                    subtitle: Text(
+                      RulesService.instance.cachedLastCheck != null
+                          ? 'Última actualización: ${RulesService.instance.cachedLastCheck}'
+                          : 'Sin datos de última actualización',
+                    ),
+                    trailing: status == RulesStatus.updateAvailable
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withOpacity(0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.green.shade600),
+                            ),
+                            child: Text(
+                              'Nueva versión',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Colors.green.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          )
+                        : null,
+                    onTap: isLoading
+                        ? null
+                        : () async {
+                            await ref.read(rulesProvider.notifier).refresh();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Reglas actualizadas'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
+                  );
+                },
               ),
               const Divider(height: 1),
               ListTile(
@@ -417,16 +460,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref
           .read(notificationSettingsProvider.notifier)
           .setDayBeforeTime(picked.hour, picked.minute);
-    }
-  }
-
-  Future<void> _refreshRules(BuildContext context) async {
-    // Llama al RulesNotifier que ya definimos antes
-    await ref.read(rulesProvider.notifier).refresh();
-    if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Actualizando reglas...')));
     }
   }
 

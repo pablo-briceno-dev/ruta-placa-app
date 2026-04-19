@@ -64,6 +64,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
           borderRadius: BorderRadiusGeometry.circular(10),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             if (resultPlate.reason == RestrictionReason.comingSoon)
               Container(
@@ -157,40 +158,37 @@ class RestrictedDigitsRow extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              Expanded(
-                flex: 1,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: RestrictionTimerWidget(
-                    isRestricted: resultPlate.hasRestriction,
-                    // Rangos principales (para el badge)
-                    ranges:
-                        city
-                                ?.restrictions[effectiveVehicleType]
-                                ?.timeRanges
-                                .isNotEmpty ==
-                            true
-                        ? city!.restrictions[effectiveVehicleType]!.timeRanges
-                        : [
-                            TimeRange(start: morningStart, end: morningEnd),
-                            if (afternoonStart != null)
-                              TimeRange(
-                                start: afternoonStart,
-                                end: afternoonEnd!,
-                              ),
-                          ],
-                    // Rangos por origen (activa el botón del modal)
-                    rangesByOrigin:
-                        city
-                                ?.restrictions[effectiveVehicleType]
-                                ?.timeRangesByOrigin
-                                .isNotEmpty ==
-                            true
-                        ? city!
-                              .restrictions[effectiveVehicleType]!
-                              .timeRangesByOrigin
-                        : null,
-                  ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: RestrictionTimerWidget(
+                  isRestricted: resultPlate.hasRestriction,
+                  // Rangos principales (para el badge)
+                  ranges:
+                      city
+                              ?.restrictions[effectiveVehicleType]
+                              ?.timeRanges
+                              .isNotEmpty ==
+                          true
+                      ? city!.restrictions[effectiveVehicleType]!.timeRanges
+                      : [
+                          TimeRange(start: morningStart, end: morningEnd),
+                          if (afternoonStart != null)
+                            TimeRange(
+                              start: afternoonStart,
+                              end: afternoonEnd!,
+                            ),
+                        ],
+                  // Rangos por origen (activa el botón del modal)
+                  rangesByOrigin:
+                      city
+                              ?.restrictions[effectiveVehicleType]
+                              ?.timeRangesByOrigin
+                              .isNotEmpty ==
+                          true
+                      ? city!
+                            .restrictions[effectiveVehicleType]!
+                            .timeRangesByOrigin
+                      : null,
                 ),
               ),
             ],

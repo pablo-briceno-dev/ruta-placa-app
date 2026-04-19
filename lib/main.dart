@@ -7,7 +7,6 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:intl/date_symbol_data_local.dart' show initializeDateFormatting;
 import 'package:ruta_placa/core/router.dart';
 import 'package:ruta_placa/core/theme.dart';
-import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
 import 'package:ruta_placa/services/admob_service.dart';
 import 'package:ruta_placa/services/background_service.dart';
@@ -16,7 +15,6 @@ import 'package:ruta_placa/services/notification_service.dart';
 import 'package:ruta_placa/services/rules_service.dart';
 import 'package:ruta_placa/services/widget_service.dart';
 import 'package:ruta_placa/widgets/global_listeners.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 void main() async {
@@ -24,8 +22,8 @@ void main() async {
   unawaited(MobileAds.instance.initialize());
 
   await RulesService.instance.init();
-
-  final prefs = await SharedPreferences.getInstance();
+  // SQLite — precalentar la conexión
+  await DatabaseService.instance.db;
 
   await initializeDateFormatting('es_ES', null);
 
@@ -40,16 +38,9 @@ void main() async {
   await WidgetService.instance.init();
   AdmobService.instance.loadInterstitial(); // precarga
 
-  // SQLite — precalentar la conexión
-  await DatabaseService.instance.db;
   await NotificationService.instance.init();
 
-  runApp(
-    ProviderScope(
-      overrides: [sharedPrefsProvider.overrideWithValue(prefs)],
-      child: GlobalListeners(child: MyApp()),
-    ),
-  );
+  runApp(const ProviderScope(child: GlobalListeners(child: MyApp())));
 }
 
 class MyApp extends ConsumerWidget {

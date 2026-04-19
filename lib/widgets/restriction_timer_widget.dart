@@ -231,7 +231,7 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
         const SizedBox(width: 10),
 
         // Info lateral
-        Expanded(
+        Flexible(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,

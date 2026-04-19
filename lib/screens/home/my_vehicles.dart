@@ -13,82 +13,78 @@ class MyVehicles extends ConsumerWidget {
     final vehicles = ref.watch(vehiclesProvider).vehicles;
     final defaultVehicle = ref.watch(defaultVehicleProvider);
 
-    return Expanded(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(1),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (defaultVehicle == null) ...[
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Center(
-                  child: Text(
-                    'Aún no tienes ningún vehículo guardado. Añade uno a continuación.',
-                    style: TextStyle(
-                      fontSize: theme.textTheme.titleLarge?.fontSize,
-                      fontWeight: theme.textTheme.titleLarge?.fontWeight,
-                    ),
-                    textAlign: TextAlign.center,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(1),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (defaultVehicle == null) ...[
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: Text(
+                  'Aún no tienes ningún vehículo guardado. Añade uno a continuación.',
+                  style: TextStyle(
+                    fontSize: theme.textTheme.titleLarge?.fontSize,
+                    fontWeight: theme.textTheme.titleLarge?.fontWeight,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-              const SizedBox(height: 16),
-              Center(
-                child: ElevatedButton.icon(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const FormVehicleScreen(),
-                    ),
-                  ),
-                  label: Text('Agregar vehículo'),
-                  icon: const Icon(Icons.add),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.chipTheme.selectedColor,
-                  ),
-                ),
-              ),
-            ],
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 400),
-              transitionBuilder: (child, animation) {
-                return FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, -0.2),
-                      end: Offset.zero,
-                    ).animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: defaultVehicle != null
-                  ? MyVehicleCard(
-                      key: ValueKey(defaultVehicle.plate), // 🔥 CLAVE
-                      vehicle: defaultVehicle,
-                      isDefault: true,
-                    )
-                  : const SizedBox(),
             ),
-            ...vehicles.map((vehicle) {
-              if (defaultVehicle?.plate == vehicle.plate) {
-                return const SizedBox();
-              }
-
-              return AnimatedOpacity(
-                duration: const Duration(milliseconds: 300),
-                opacity: 1,
-                child: MyVehicleCard(
-                  key: ValueKey(vehicle.plate),
-                  vehicle: vehicle,
-                  isDefault: vehicle.isDefault, // ← pasar correctamente
+            const SizedBox(height: 16),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const FormVehicleScreen()),
+                ),
+                label: Text('Agregar vehículo'),
+                icon: const Icon(Icons.add),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.chipTheme.selectedColor,
+                ),
+              ),
+            ),
+          ],
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 400),
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, -0.2),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
                 ),
               );
-            }),
-          ],
-        ),
+            },
+            child: defaultVehicle != null
+                ? MyVehicleCard(
+                    key: ValueKey(defaultVehicle.plate), // 🔥 CLAVE
+                    vehicle: defaultVehicle,
+                    isDefault: true,
+                  )
+                : const SizedBox(),
+          ),
+          ...vehicles.map((vehicle) {
+            if (defaultVehicle?.plate == vehicle.plate) {
+              return const SizedBox();
+            }
+
+            return AnimatedOpacity(
+              duration: const Duration(milliseconds: 300),
+              opacity: 1,
+              child: MyVehicleCard(
+                key: ValueKey(vehicle.plate),
+                vehicle: vehicle,
+                isDefault: vehicle.isDefault, // ← pasar correctamente
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
