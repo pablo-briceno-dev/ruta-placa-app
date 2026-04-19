@@ -2,8 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:ruta_placa/core/utils/time_format_utils.dart';
+import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
-import 'package:ruta_placa/providers/settings_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 import 'package:ruta_placa/screens/settings/info_tile.dart';
@@ -12,6 +13,7 @@ import 'package:ruta_placa/screens/settings/section_header.dart';
 import 'package:ruta_placa/screens/settings/test_notificacion.dart';
 import 'package:ruta_placa/screens/settings/theme_tile.dart';
 import 'package:ruta_placa/screens/settings/vehicles_switch_list_sheet.dart';
+import 'package:ruta_placa/services/city_rules_reader.dart';
 import 'package:ruta_placa/services/notification_service.dart';
 import 'package:ruta_placa/services/rules_service.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -25,6 +27,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   String _version = '';
+  DateTime? _lastReschedule;
 
   @override
   void initState() {
@@ -122,9 +125,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 // Dia anterior
                 SwitchListTile(
                   value: notifState.dayBeforeEnabled,
-                  onChanged: (value) => ref
-                      .read(notificationSettingsProvider.notifier)
-                      .setDayBefore(value),
+                  onChanged: (value) async {
+                    await ref
+                        .read(notificationSettingsProvider.notifier)
+                        .setDayBefore(value);
+                    await _reschedule();
+                  },
                   secondary: _iconBox(
                     Icons.wb_twilight_outlined,
                     Colors.indigo,
@@ -184,9 +190,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 // Mismo día ----------------------
                 SwitchListTile(
                   value: notifState.sameDayEnabled,
-                  onChanged: (value) => ref
-                      .read(notificationSettingsProvider.notifier)
-                      .setSameDay(value),
+                  onChanged: (value) async {
+                    await ref
+                        .read(notificationSettingsProvider.notifier)
+                        .setSameDay(value);
+                    await _reschedule();
+                  },
                   secondary: _iconBox(Icons.alarm_outlined, Colors.orange),
                   title: Text('Mismo día', style: textTheme.titleSmall),
                   subtitle: Text(
@@ -446,6 +455,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     }
     await ref.read(notificationSettingsProvider.notifier).setEnabled(value);
+    await _reschedule();
   }
 
   Future<void> _pickTime(BuildContext context) async {
@@ -462,6 +472,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await ref
           .read(notificationSettingsProvider.notifier)
           .setDayBeforeTime(picked.hour, picked.minute);
+
+      await _reschedule(
+        current.copyWith(
+          dayBeforeHour: picked.hour,
+          dayBeforeMinute: picked.minute,
+        ),
+      );
+      if (kDebugMode) {
+        await Future.delayed(const Duration(seconds: 2));
+        await NotificationService.instance.fireNow(id: 20);
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Notificaciones para las '
+              '${formatTimeOfDay(context, picked)}',
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -510,6 +543,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _reschedule([NotificationSettings? overrideSettings]) async {
+    // Evitar llamadas duplicadas en menos de 500ms
+    final now = DateTime.now();
+    if (_lastReschedule != null &&
+        now.difference(_lastReschedule!).inMilliseconds < 500) {
+      debugPrint('⏭️ _reschedule ignorado — demasiado pronto');
+      return;
+    }
+    _lastReschedule = now;
+
+    final settings = overrideSettings ?? ref.read(notificationSettingsProvider);
+    final vehicles = ref.read(vehiclesProvider).vehicles;
+    final rules = ref.read(rulesProvider);
+
+    await NotificationService.instance.scheduleAll(
+      vehicles: vehicles,
+      settings: settings!,
+      rulesReader: CityRulesReader(rules.cities),
     );
   }
 }

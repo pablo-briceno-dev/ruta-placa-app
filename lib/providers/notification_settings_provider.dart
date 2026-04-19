@@ -11,7 +11,7 @@ class NotificationSettings {
   final bool sameDayEnabled;
   // IDs de vehículos con notificaciones activas
   // null = todos activos
-  final Set<int> enabledVehicleIds;
+  final Set<int> disabledVehicleIds;
 
   const NotificationSettings({
     this.notificationsEnabled = false,
@@ -19,11 +19,10 @@ class NotificationSettings {
     this.dayBeforeHour = 20,
     this.dayBeforeMinute = 0,
     this.sameDayEnabled = true,
-    this.enabledVehicleIds = const {},
+    this.disabledVehicleIds = const {},
   });
 
-  bool isVehicleEnabled(int id) =>
-      enabledVehicleIds.isEmpty || enabledVehicleIds.contains(id);
+  bool isVehicleEnabled(int id) => !disabledVehicleIds.contains(id);
 
   NotificationSettings copyWith({
     bool? notificationsEnabled,
@@ -31,19 +30,19 @@ class NotificationSettings {
     int? dayBeforeHour,
     int? dayBeforeMinute,
     bool? sameDayEnabled,
-    Set<int>? enabledVehicleIds,
+    Set<int>? disabledVehicleIds,
   }) => NotificationSettings(
     notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     dayBeforeEnabled: dayBeforeEnabled ?? this.dayBeforeEnabled,
     dayBeforeHour: dayBeforeHour ?? this.dayBeforeHour,
     dayBeforeMinute: dayBeforeMinute ?? this.dayBeforeMinute,
     sameDayEnabled: sameDayEnabled ?? this.sameDayEnabled,
-    enabledVehicleIds: enabledVehicleIds ?? this.enabledVehicleIds,
+    disabledVehicleIds: disabledVehicleIds ?? this.disabledVehicleIds,
   );
 
-  String dayBeforeTimeFormatted (bool use24h) => formatTimeOfDayRaw(
+  String dayBeforeTimeFormatted(bool use24h) => formatTimeOfDayRaw(
     TimeOfDay(hour: dayBeforeHour, minute: dayBeforeMinute),
-    use24h: use24h
+    use24h: use24h,
   );
 }
 
@@ -62,15 +61,17 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
   Future<void> _load() async {
     final p = await SharedPreferences.getInstance();
     final vehicleIds =
-        p.getStringList('notif_vehicle_ids')?.map(int.parse).toSet() ?? {};
+        p.getStringList('notif_disabled_vehicle_ids')?.map(int.parse).toSet() ??
+        {};
     state = NotificationSettings(
       notificationsEnabled: p.getBool('notif_enabled') ?? false,
       dayBeforeEnabled: p.getBool('notif_day_before') ?? true,
       dayBeforeHour: p.getInt('notif_db_hour') ?? 20,
       dayBeforeMinute: p.getInt('notif_db_minute') ?? 0,
       sameDayEnabled: p.getBool('notif_same_day') ?? true,
-      enabledVehicleIds: vehicleIds,
+      disabledVehicleIds: vehicleIds,
     );
+    debugPrint('📦 Loaded disabledVehicleIds: $vehicleIds');
   }
 
   Future<void> _save() async {
@@ -81,8 +82,8 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
     await p.setInt('notif_db_minute', state.dayBeforeMinute);
     await p.setBool('notif_same_day', state.sameDayEnabled);
     await p.setStringList(
-      'notif_vehicle_ids',
-      state.enabledVehicleIds.map((e) => e.toString()).toList(),
+      'notif_disabled_vehicle_ids',
+      state.disabledVehicleIds.map((e) => e.toString()).toList(),
     );
   }
 
@@ -107,9 +108,13 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
   }
 
   Future<void> toggleVehicle(int id, bool enabled) async {
-    final ids = Set<int>.from(state.enabledVehicleIds);
-    enabled ? ids.add(id) : ids.remove(id);
-    state = state.copyWith(enabledVehicleIds: ids);
+    final ids = Set<int>.from(state.disabledVehicleIds);
+    if (!enabled) {
+      ids.add(id);
+    } else {
+      ids.remove(id);
+    }
+    state = state.copyWith(disabledVehicleIds: ids);
     await _save();
   }
 }

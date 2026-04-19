@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
-import 'package:ruta_placa/providers/settings_provider.dart';
+import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
 import 'package:ruta_placa/providers/widget_data_provider.dart';
 import 'package:ruta_placa/services/city_rules_reader.dart';

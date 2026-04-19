@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ruta_placa/providers/settings_provider.dart';
+import 'package:ruta_placa/providers/notification_settings_provider.dart';
+import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/services/city_rules_reader.dart';
+import 'package:ruta_placa/services/notification_service.dart';
 
 class VehiclesSwitchListSheet extends ConsumerStatefulWidget {
   const VehiclesSwitchListSheet({super.key});
@@ -69,9 +72,29 @@ class _VehiclesSwitchListSheetState
                       if (index > 0) const Divider(height: 1),
                       SwitchListTile(
                         value: notifState.isVehicleEnabled(vehicle.id!),
-                        onChanged: (enabled) => ref
-                            .read(notificationSettingsProvider.notifier)
-                            .toggleVehicle(vehicle.id!, enabled),
+                        onChanged: (enabled) async {
+                          await ref
+                              .read(notificationSettingsProvider.notifier)
+                              .toggleVehicle(vehicle.id!, enabled);
+
+                          await Future.delayed(
+                            const Duration(milliseconds: 50),
+                          );
+
+                          final updatedSettings = ref.read(
+                            notificationSettingsProvider,
+                          );
+                          final allVehicles = ref
+                              .read(vehiclesProvider)
+                              .vehicles;
+                          final rules = ref.read(rulesProvider);
+
+                          await NotificationService.instance.scheduleAll(
+                            vehicles: allVehicles,
+                            settings: updatedSettings,
+                            rulesReader: CityRulesReader(rules.cities),
+                          );
+                        },
                         secondary: Container(
                           width: 40,
                           height: 40,

@@ -6,7 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/vehicle.dart';
-import 'package:ruta_placa/providers/settings_provider.dart';
+import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/services/city_rules_reader.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
@@ -37,27 +37,23 @@ class NotificationService {
     _initialized = true;
   }
 
-  // Pedir permiso de notificaciones
   Future<bool> requestPermission() async {
     final status = await Permission.notification.request();
     return status.isGranted;
   }
 
-  Future<bool> hasPermission() async {
-    return await Permission.notification.isGranted;
-  }
+  Future<bool> hasPermission() async => await Permission.notification.isGranted;
 
-  // --- Programar todas las notificaciones -----------------------------------
-  // Llamar: al guardar ajustes, al iniciar la app, al agregar vehículo
   Future<void> scheduleAll({
     required List<Vehicle> vehicles,
     required NotificationSettings settings,
     required CityRulesReader rulesReader,
   }) async {
-    // cancelar todas las anteriores antes de reprogramar
     await _plugin.cancelAll();
 
-    if (!settings.notificationsEnabled) return;
+    if (!settings.notificationsEnabled) {
+      return;
+    }
 
     final androidPlugin = _plugin
         .resolvePlatformSpecificImplementation<
@@ -67,19 +63,26 @@ class NotificationService {
     if (androidPlugin != null) {
       final granted = await androidPlugin.requestExactAlarmsPermission();
       if (granted != true) {
-        debugPrint('Permiso de alarma exacta denegado');
         return;
       }
     }
 
+    final now = DateTime.now();
+    int scheduled = 0;
+
     for (final vehicle in vehicles) {
-      if (!settings.isVehicleEnabled(vehicle.id!)) continue;
+      if (!settings.isVehicleEnabled(vehicle.id!)) {
+        debugPrint('   ⏭️ Saltado — vehículo deshabilitado');
+        continue;
+      }
+
       final cityRule = rulesReader.getCity(vehicle.cityId);
-      if (cityRule == null) continue;
 
-      final now = DateTime.now();
+      if (cityRule == null) {
+        debugPrint('   ⏭️ Saltado — ciudad no encontrada');
+        continue;
+      }
 
-      // --- nOtificación del día anterior -----------
       if (settings.dayBeforeEnabled) {
         final tomorrow = DateTime(now.year, now.month, now.day + 1);
         final result = PicoPlacaCalculator.checkPlate(
@@ -102,56 +105,23 @@ class NotificationService {
           if (notifTime.isAfter(now)) {
             await _schedule(
               id: _idForVehicle(vehicle.id!, 0),
-              title: 'Pico y Placa mañana - ${vehicle.alias}',
+              title: 'Pico y Placa mañana — ${vehicle.alias}',
               body: _buildBody(vehicle, result, tomorrow),
               time: notifTime,
             );
+            scheduled++;
+          } else {
+            debugPrint('   ⏭️ Saltado — la hora ya pasó hoy');
           }
         }
       }
-      // ── Notificación 1h antes del inicio ─────────────
-      if (settings.sameDayEnabled) {
-        final today = DateTime(now.year, now.month, now.day);
-        final result = PicoPlacaCalculator.checkPlate(
-          cityRule: cityRule,
-          plate: vehicle.plate,
-          vehicleType: vehicle.vehicleType,
-          date: today,
-          plateOrigin: vehicle.plateOrigin,
-        );
 
-        if (result.hasRestriction || result.appliesToAll) {
-          final restriction = cityRule.restrictionFor(vehicle.vehicleType);
-          final startHour = restriction.morningStart.hour;
-          final startMin = restriction.morningStart.minute;
-
-          final notifTime = DateTime(
-            now.year,
-            now.month,
-            now.day,
-            startHour,
-            startMin,
-          ).subtract(const Duration(hours: 1));
-
-          if (notifTime.isAfter(now)) {
-            await _schedule(
-              id: _idForVehicle(vehicle.id!, 1),
-              title: 'Pico y placa en 1 hora — ${vehicle.alias}',
-              body: _buildBody(vehicle, result, today),
-              time: notifTime,
-            );
-          }
-        }
-      }
+      // ... mismo para sameDayEnabled
     }
-  }
 
-  String _buildBody(Vehicle vehicle, dynamic result, DateTime date) {
-    final plates = result.appliesToAll
-        ? 'todos los dígitos'
-        : 'dígitos ${(result.restrictedPlates as List).join(', ')}';
-    final dayStr = _isSameDay(date, DateTime.now()) ? 'hoy' : 'mañana';
-    return 'Tu placa ${vehicle.plate} tiene restricción $dayStr — $plates';
+    debugPrint(
+      '✅ scheduleAll completado — $scheduled notificaciones programadas',
+    );
   }
 
   Future<void> _schedule({
@@ -165,17 +135,20 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >();
 
-    // Intentar alarma exacta, si falla usar inexacta
     final canExact = Platform.isAndroid
         ? await androidPlugin?.canScheduleExactNotifications() ?? false
         : true;
 
+    final scheduled = tz.TZDateTime.from(time, tz.local);
+
+    debugPrint('  ➕ Programando #$id "$title" para $scheduled');
+
+    // ✅ title y body ahora se pasan correctamente
     await _plugin.zonedSchedule(
-      androidScheduleMode: canExact
-          ? AndroidScheduleMode.exactAllowWhileIdle
-          : AndroidScheduleMode.inexact,
       id: id,
-      scheduledDate: tz.TZDateTime.from(time, tz.local),
+      title: title,
+      body: body,
+      scheduledDate: scheduled,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'pico_placa_channel',
@@ -183,7 +156,7 @@ class NotificationService {
           channelDescription: 'Alertas de pico y placa',
           importance: Importance.high,
           priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
+          icon: '@drawable/ic_launcher_foreground',
         ),
         iOS: DarwinNotificationDetails(
           presentAlert: true,
@@ -191,12 +164,21 @@ class NotificationService {
           presentSound: true,
         ),
       ),
+      androidScheduleMode: canExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
+          : AndroidScheduleMode.inexact,
     );
   }
 
-  // ID único por vehículo y tipo (0=día anterior, 1=mismo día)
-  int _idForVehicle(int vehicleId, int type) => vehicleId * 10 + type;
+  String _buildBody(Vehicle vehicle, dynamic result, DateTime date) {
+    final plates = result.appliesToAll
+        ? 'todos los dígitos'
+        : 'dígitos ${(result.restrictedPlates as List).join(', ')}';
+    final dayStr = _isSameDay(date, DateTime.now()) ? 'hoy' : 'mañana';
+    return 'Tu placa ${vehicle.plate} tiene restricción $dayStr — $plates';
+  }
 
+  int _idForVehicle(int vehicleId, int type) => vehicleId * 10 + type;
   bool _isSameDay(DateTime a, DateTime b) =>
       a.year == b.year && a.month == b.month && a.day == b.day;
 
@@ -206,13 +188,12 @@ class NotificationService {
     required Vehicle vehicle,
     required CityRule? cityRule,
   }) async {
-    // Mostrar inmediatamente sin programar
     await _plugin.show(
-      id: 9999, // ID fijo para la notificación de prueba
+      id: 9999,
       title: 'Prueba — ${vehicle.alias}',
       body: cityRule != null
-          ? 'Esta es una notificación de prueba para ${vehicle.plate} en ${cityRule.name}'
-          : 'Esta es una notificación de prueba para ${vehicle.plate}',
+          ? 'Notificación de prueba para ${vehicle.plate} en ${cityRule.name}'
+          : 'Notificación de prueba para ${vehicle.plate}',
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'pico_placa_channel',
@@ -226,6 +207,31 @@ class NotificationService {
           presentAlert: true,
           presentBadge: false,
           presentSound: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> fireNow({required int id}) async {
+    final pending = await _plugin.pendingNotificationRequests();
+    final notif = pending.firstWhere(
+      (n) => n.id == id,
+      orElse: () => throw Exception('No encontrada'),
+    );
+
+    // Mostrar inmediatamente con el mismo contenido
+    await _plugin.show(
+      id: notif.id,
+      title: notif.title,
+      body: notif.body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'pico_placa_channel',
+          'Pico y placa',
+          channelDescription: 'Alertas de pico y placa',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@drawable/ic_launcher_foreground',
         ),
       ),
     );
