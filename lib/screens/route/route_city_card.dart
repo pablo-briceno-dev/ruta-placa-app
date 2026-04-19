@@ -41,7 +41,7 @@ class RouteCityCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ListTile(
-            leading: Text(city.cityEmoji, style: const TextStyle(fontSize: 24)),
+            leading: const Icon(Icons.location_city),
             title: Text(city.cityName, style: theme.textTheme.titleMedium),
             subtitle: isLast
                 ? Text(
