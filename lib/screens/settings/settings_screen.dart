@@ -497,10 +497,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           dayBeforeMinute: picked.minute,
         ),
       );
-      if (kDebugMode) {
-        await Future.delayed(const Duration(seconds: 2));
-        await NotificationService.instance.fireNow(id: 20);
-      }
+      // if (kDebugMode) {
+      //   await Future.delayed(const Duration(seconds: 2));
+      //   await NotificationService.instance.fireNow(id: 20);
+      // }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

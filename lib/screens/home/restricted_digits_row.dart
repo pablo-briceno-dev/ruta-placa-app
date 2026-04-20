@@ -148,7 +148,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
                         child: Text(
                           digit,
                           style: TextStyle(
-                            fontSize: 25,
+                            fontSize: theme.textTheme.bodyMedium?.fontSize,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
