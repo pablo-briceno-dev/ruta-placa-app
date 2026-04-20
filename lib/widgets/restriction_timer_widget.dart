@@ -1,52 +1,41 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/time_range.dart';
+import 'package:ruta_placa/providers/restriction_timer_provider.dart';
 import 'package:ruta_placa/widgets/schedule_modal.dart';
 
-enum _TimerStatus { active, upcoming, allDay, free }
-
-class _TimerState {
-  final _TimerStatus status;
-  final Duration remaining;
-  final TimeRange currentRange;
-  final TimeRange? nextRange;
-
-  const _TimerState({
-    required this.status,
-    required this.remaining,
-    required this.currentRange,
-    this.nextRange,
-  });
-}
-
-class RestrictionTimerWidget extends StatefulWidget {
+class RestrictionTimerWidget extends ConsumerStatefulWidget {
   final bool isRestricted;
   final List<TimeRange> ranges;
   final Map<PlateOrigin, List<TimeRange>>? rangesByOrigin;
+  final String? vehiclePlate;
 
   const RestrictionTimerWidget({
     super.key,
     required this.isRestricted,
     required this.ranges,
     this.rangesByOrigin,
+    this.vehiclePlate,
   });
 
   @override
-  State<RestrictionTimerWidget> createState() => _RestrictionTimerWidgetState();
+  ConsumerState<RestrictionTimerWidget> createState() =>
+      _RestrictionTimerWidgetState();
 }
 
-class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
-  _TimerState? _state;
+class _RestrictionTimerWidgetState
+    extends ConsumerState<RestrictionTimerWidget> {
+  TimerState? _localState;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    _update();
-    if (!_isAllDay()) {
-      _timer = Timer.periodic(const Duration(seconds: 1), (_) => _update());
+    if (widget.vehiclePlate == null) {
+      _startLocalTimer();
     }
   }
 
@@ -56,6 +45,27 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
     super.dispose();
   }
 
+  void _startLocalTimer() {
+    _updateLocal();
+    if (!_isAllDay()) {
+      _timer = Timer.periodic(
+        const Duration(seconds: 1),
+        (_) => _updateLocal(),
+      );
+    }
+  }
+
+  void _updateLocal() {
+    if (mounted) {
+      setState(
+        () => _localState = RestrictionTimerNotifier.compute(
+          widget.isRestricted,
+          widget.ranges,
+        ),
+      );
+    }
+  }
+
   bool _isAllDay() =>
       widget.ranges.length == 1 &&
       widget.ranges.first.start.hour == 0 &&
@@ -63,86 +73,15 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
       widget.ranges.first.end.hour == 23 &&
       widget.ranges.first.end.minute == 59;
 
-  void _update() {
-    final state = _computeState(widget.ranges);
-    if (mounted) setState(() => _state = state);
-  }
-
-  _TimerState _computeState(List<TimeRange> ranges) {
-    if (!widget.isRestricted) {
-      final first = ranges.isNotEmpty ? ranges.first : null;
-      return _TimerState(
-        status: _TimerStatus.free,
-        remaining: Duration.zero,
-        currentRange:
-            first ??
-            TimeRange(
-              start: const TimeOfDay(hour: 0, minute: 0),
-              end: const TimeOfDay(hour: 0, minute: 0),
-            ),
-      );
-    }
-
-    if (_isAllDay()) {
-      return _TimerState(
-        status: _TimerStatus.allDay,
-        remaining: Duration.zero,
-        currentRange: ranges.first,
-      );
-    }
-
-    final now = DateTime.now();
-
-    for (int i = 0; i < ranges.length; i++) {
-      final r = ranges[i];
-      final start = _toDateTime(r.start);
-      final end = _toDateTime(r.end);
-
-      if (now.isBefore(start)) {
-        return _TimerState(
-          status: _TimerStatus.upcoming,
-          remaining: start.difference(now),
-          currentRange: r,
-          nextRange: i + 1 < ranges.length ? ranges[i + 1] : null,
-        );
-      }
-
-      if (now.isAfter(start) && now.isBefore(end)) {
-        return _TimerState(
-          status: _TimerStatus.active,
-          remaining: end.difference(now),
-          currentRange: r,
-          nextRange: i + 1 < ranges.length ? ranges[i + 1] : null,
-        );
-      }
-    }
-
-    // Todos los rangos pasaron → mostrar cuenta para mañana
-    final first = ranges.first;
-    final tomorrow = DateTime(
-      now.year,
-      now.month,
-      now.day + 1,
-      first.start.hour,
-      first.start.minute,
-    );
-    return _TimerState(
-      status: _TimerStatus.upcoming,
-      remaining: tomorrow.difference(now),
-      currentRange: first,
-    );
-  }
-
-  DateTime _toDateTime(TimeOfDay t) {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, now.day, t.hour, t.minute);
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (_state == null) return const SizedBox.shrink();
+    // Si hay placa → usar el provider centralizado
+    final TimerState? s = widget.vehiclePlate != null
+        ? ref.watch(restrictionTimerProvider(widget.vehiclePlate!))
+        : _localState;
+
+    if (s == null) return const SizedBox.shrink();
     final use24h = MediaQuery.alwaysUse24HourFormatOf(context);
-    final s = _state!;
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final hasMultiOrigin =
@@ -155,25 +94,25 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
     final String timeStr;
 
     switch (s.status) {
-      case _TimerStatus.active:
+      case TimerStatus.active:
         badgeBg = scheme.error.withValues(alpha: 0.10);
         badgeBorder = scheme.error;
         badgeText = scheme.error;
         label = 'Termina en';
         timeStr = _format(s.remaining);
-      case _TimerStatus.upcoming:
+      case TimerStatus.upcoming:
         badgeBg = Colors.orange.withValues(alpha: 0.10);
         badgeBorder = Colors.orange.shade700;
         badgeText = Colors.orange.shade800;
         label = 'Inicia en';
         timeStr = _format(s.remaining);
-      case _TimerStatus.allDay:
+      case TimerStatus.allDay:
         badgeBg = scheme.error.withValues(alpha: 0.10);
         badgeBorder = scheme.error;
         badgeText = scheme.error;
         label = 'Restricción';
         timeStr = 'Todo el día';
-      case _TimerStatus.free:
+      case TimerStatus.free:
         badgeBg = scheme.primary.withValues(alpha: 0.10);
         badgeBorder = scheme.primary;
         badgeText = scheme.primary;
@@ -206,18 +145,18 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
                 timeStr,
                 style: TextStyle(
                   fontSize:
-                      s.status == _TimerStatus.free ||
-                          s.status == _TimerStatus.allDay
+                      s.status == TimerStatus.free ||
+                          s.status == TimerStatus.allDay
                       ? 13
                       : 18,
                   fontWeight: FontWeight.bold,
                   color: badgeText,
                 ),
               ),
-              if (s.status == _TimerStatus.active ||
-                  s.status == _TimerStatus.upcoming)
+              if (s.status == TimerStatus.active ||
+                  s.status == TimerStatus.upcoming)
                 Text(
-                  s.status == _TimerStatus.active
+                  s.status == TimerStatus.active
                       ? 'hasta las ${_fmt(s.currentRange.end, use24h)}'
                       : 'a las ${_fmt(s.currentRange.start, use24h)}',
                   style: TextStyle(
@@ -239,7 +178,7 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
             children: [
               // Rango actual
               Text(
-                s.status == _TimerStatus.free
+                s.status == TimerStatus.free
                     ? 'Sin restricción hoy'
                     : '${_fmt(s.currentRange.start, use24h)}'
                           ' — ${_fmt(s.currentRange.end, use24h)}',
@@ -258,9 +197,9 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
                     height: 6,
                     margin: const EdgeInsets.only(right: 4),
                     decoration: BoxDecoration(
-                      color: s.status == _TimerStatus.active
+                      color: s.status == TimerStatus.active
                           ? scheme.error
-                          : s.status == _TimerStatus.upcoming
+                          : s.status == TimerStatus.upcoming
                           ? Colors.orange
                           : scheme.primary,
                       shape: BoxShape.circle,
@@ -270,7 +209,7 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
                     child: Text(
                       _statusSubtitle(s, use24h),
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: s.status == _TimerStatus.active
+                        color: s.status == TimerStatus.active
                             ? scheme.error
                             : scheme.onSurface.withValues(alpha: 0.6),
                       ),
@@ -325,17 +264,17 @@ class _RestrictionTimerWidgetState extends State<RestrictionTimerWidget> {
     return '$h:$m $pm';
   }
 
-  String _statusSubtitle(_TimerState s, bool use24h) {
+  String _statusSubtitle(TimerState s, bool use24h) {
     switch (s.status) {
-      case _TimerStatus.active:
+      case TimerStatus.active:
         return 'Restricción activa ahora';
-      case _TimerStatus.upcoming:
+      case TimerStatus.upcoming:
         return s.nextRange != null
             ? 'Próximo: ${_fmt(s.nextRange!.start, use24h)}'
             : 'Sin más franjas hoy';
-      case _TimerStatus.allDay:
+      case TimerStatus.allDay:
         return 'Aplica todo el día';
-      case _TimerStatus.free:
+      case TimerStatus.free:
         return 'Puedes circular libremente';
     }
   }

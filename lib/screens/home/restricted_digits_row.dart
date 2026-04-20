@@ -37,7 +37,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
       plate: vehicle?.plate ?? plate,
       vehicleType: vehicle?.vehicleType ?? vehicleType,
       date: date,
-      time: TimeOfDay(hour: date.hour, minute: date.minute),
+      // time: TimeOfDay(hour: date.hour, minute: date.minute),
       plateOrigin: vehicle?.plateOrigin ?? PlateOrigin.any,
     );
     final formatted = capitalizeString(
@@ -162,7 +162,6 @@ class RestrictedDigitsRow extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: RestrictionTimerWidget(
                   isRestricted: resultPlate.hasRestriction,
-                  // Rangos principales (para el badge)
                   ranges:
                       city
                               ?.restrictions[effectiveVehicleType]
@@ -189,6 +188,7 @@ class RestrictedDigitsRow extends ConsumerWidget {
                             .restrictions[effectiveVehicleType]!
                             .timeRangesByOrigin
                       : null,
+                  vehiclePlate: vehicle?.plate,
                 ),
               ),
             ],

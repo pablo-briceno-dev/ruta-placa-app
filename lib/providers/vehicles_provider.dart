@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:ruta_placa/models/vehicle.dart';
@@ -63,9 +62,6 @@ class VehiclesNotifier extends StateNotifier<VehiclesState> {
     final updated = state.vehicles
         .map((v) => v.copyWith(isDefault: v.id == id))
         .toList();
-    debugPrint(
-      'vehicles after setDefault: ${updated.map((v) => '${v.plate}:${v.isDefault}')}',
-    );
     state = state.copyWith(vehicles: updated);
   }
 

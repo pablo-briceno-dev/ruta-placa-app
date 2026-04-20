@@ -86,17 +86,22 @@ class _CityCalendarSheetState extends ConsumerState<CityCalendarSheet> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  widget.city.cityEmoji,
-                  style: const TextStyle(fontSize: 20),
-                ),
+                const Icon(Icons.location_city),
                 const SizedBox(width: 8),
-                Text(widget.city.cityName, style: theme.textTheme.titleMedium),
+                Expanded(
+                  child: Text(
+                    widget.city.cityName,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                ),
                 const Spacer(),
-                Text(
-                  '$formatted - ${restricted.hasRestriction ? 'Con' : 'Sin'} pico y placa',
-                  style: theme.textTheme.titleMedium,
+                Flexible(
+                  child: Text(
+                    '$formatted - ${restricted.hasRestriction ? 'Con' : 'Sin'} pico y placa',
+                    style: theme.textTheme.titleMedium,
+                  ),
                 ),
               ],
             ),
