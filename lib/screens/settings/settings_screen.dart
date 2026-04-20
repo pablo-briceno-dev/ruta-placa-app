@@ -398,6 +398,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
               const Divider(height: 1),
               ListTile(
+                leading: Icon(
+                  Icons.privacy_tip_outlined,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
+                title: Text(
+                  'Política de privacidad',
+                  style: textTheme.bodyMedium,
+                ),
+                trailing: Icon(Icons.open_in_new, size: 16),
+                onTap: () => launchUrl(
+                  Uri.parse(
+                    'https://pablo-briceno-dev.github.io/ruta-placa-app-data/privacy-policy.html',
+                  ),
+                  mode: LaunchMode.externalApplication,
+                ),
+              ),
+              const Divider(height: 1),
+              ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 12),
                 leading: Icon(
                   Icons.bug_report_outlined,
