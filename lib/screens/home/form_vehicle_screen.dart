@@ -184,6 +184,7 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                       if (!_formKey.currentState!.validate()) return;
 
                       final vehicle = Vehicle(
+                        id: widget.vehicle?.id,
                         plate: _plateController.text.trim().toUpperCase(),
                         alias: _aliasController.text.trim().isEmpty
                             ? _plateController.text.toUpperCase()
@@ -193,7 +194,11 @@ class _AddVehicleScreenState extends ConsumerState<FormVehicleScreen> {
                         plateOriginIndex: _plateOrigin.index,
                       );
 
-                      ref.read(vehiclesProvider.notifier).add(vehicle);
+                      if (widget.vehicle != null) {
+                        ref.read(vehiclesProvider.notifier).add(vehicle);
+                      } else {
+                        ref.read(vehiclesProvider.notifier).add(vehicle);
+                      }
 
                       if (context.mounted) {
                         AppSnackbar.success(context, 'Vehículo guardado');

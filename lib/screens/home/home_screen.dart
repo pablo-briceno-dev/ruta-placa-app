@@ -34,6 +34,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       cityByIdProvider(selectedCity ?? defaultVehicle?.cityId),
     );
     final rules = ref.watch(rulesProvider);
+    final orientation = MediaQuery.orientationOf(context);
+    final isLandscape = orientation == Orientation.landscape;
 
     return Scaffold(
       appBar: AppBar(
@@ -55,25 +57,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: const Icon(Icons.add),
             )
           : null,
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            RestrictedDigitsRow(
-              cityId: city?.id ?? 'bogota',
+      body: isLandscape
+          ? _LandscapeLayout(
+              cityId: city?.id ?? 'pasto',
+              plate: defaultVehicle?.plate ?? '',
+            )
+          : _PortraitLayout(
+              cityId: city?.id ?? 'pasto',
               plate: defaultVehicle?.plate ?? '',
             ),
-            const Divider(),
-            const Text(
-              'Mis Vehículos',
-              textAlign: TextAlign.start,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            Expanded(child: MyVehicles()),
-          ],
-        ),
+    );
+  }
+}
+
+class _PortraitLayout extends StatelessWidget {
+  final String cityId;
+  final String plate;
+
+  const _PortraitLayout({required this.cityId, required this.plate});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RestrictedDigitsRow(cityId: cityId, plate: plate),
+          const Divider(),
+          const Text(
+            'Mis Vehículos',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          Expanded(child: MyVehicles()),
+        ],
       ),
+    );
+  }
+}
+
+class _LandscapeLayout extends StatelessWidget {
+  final String cityId;
+  final String plate;
+
+  const _LandscapeLayout({required this.cityId, required this.plate});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Columna izquierda — dígitos restringidos con scroll
+        Expanded(
+          flex: 1,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(12),
+            child: RestrictedDigitsRow(cityId: cityId, plate: plate),
+          ),
+        ),
+
+        const VerticalDivider(width: 1),
+
+        // Columna derecha — vehículos
+        Expanded(
+          flex: 1,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Mis Vehículos',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                Expanded(child: MyVehicles()),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

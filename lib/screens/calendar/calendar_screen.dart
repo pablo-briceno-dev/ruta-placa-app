@@ -9,10 +9,8 @@ import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/cities_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
-import 'package:ruta_placa/screens/calendar/colors_schedule_panel.dart';
-import 'package:ruta_placa/screens/calendar/day_detail_panel.dart';
-import 'package:ruta_placa/widgets/calendar/table_calendar_panel.dart';
-import 'package:ruta_placa/screens/calendar/vehicles_selector_button.dart';
+import 'package:ruta_placa/screens/calendar/landscape_layout.dart';
+import 'package:ruta_placa/screens/calendar/portrait_layout.dart';
 import 'package:ruta_placa/widgets/city_selector_button_widget.dart';
 import 'package:ruta_placa/widgets/update_icon_widget.dart';
 
@@ -72,6 +70,8 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
       date: DateTime.now(),
       plateOrigin: vehicle.plateOrigin,
     );
+    final orientation = MediaQuery.orientationOf(context);
+    final isLandscape = orientation == Orientation.landscape;
 
     return Scaffold(
       appBar: AppBar(
@@ -82,56 +82,51 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
           CitySelectorButtonWidget(),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Column(
-            children: [
-              Center(
-                child: VehiclesSelectorButton(
-                  selected: selectedVehicle,
-                  onSelected: (vehicle) {
-                    setState(() => selectedVehicle = vehicle);
-                  },
-                ),
-              ),
-              const SizedBox(height: 5),
-              TableCalendarPanel(
-                calDays: calDays,
-                focused: _focused,
-                selectedDate: _selectedDate,
-                onDaySelected: (sel, foc) => setState(() {
-                  _selectedDate = sel;
-                  _focused = foc;
-                }),
-                onPageChanged: (p0) => setState(() => _focused = p0),
-              ),
-              const Divider(),
-              DayDetailPanel(
-                date: DateTime(
-                  _selectedDate.year,
-                  _selectedDate.month,
-                  _selectedDate.day,
-                ),
-                city: city ?? cityRuleUtils,
-                vehicle:
-                    selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
-                plates: vehiclePlates,
-                isSytemColors: _colorsScheduleEnabled,
-              ),
-              const SizedBox(height: 10),
-              ColorsSchedulePanel(
-                plates: vehiclePlates,
-                platesRestriction: restricted.restrictedPlates,
-                lastDigitPlate: '${vehicle.lastDigit}',
-                isEnabledSystemColors: _colorsScheduleEnabled,
-                onChangedSwitch: (v) =>
-                    setState(() => _colorsScheduleEnabled = v),
-              ),
-            ],
-          ),
-        ),
-      ),
+      body: isLandscape
+          ? LandscapeLayout(
+              focused: _focused,
+              selectedDate: _selectedDate,
+              selectedVehicle: selectedVehicle,
+              colorsScheduleEnabled: _colorsScheduleEnabled,
+              onSelectedVehicle: (vehicle) {
+                setState(() => selectedVehicle = vehicle);
+              },
+              onDaySelected: (sel, foc) => setState(() {
+                _selectedDate = sel;
+                _focused = foc;
+              }),
+              onPageChanged: (p0) => setState(() => _focused = p0),
+              onChangedSwitch: (v) =>
+                  setState(() => _colorsScheduleEnabled = v),
+              restricted: restricted,
+              calDays: calDays,
+              vehiclePlates: vehiclePlates,
+              vehicle: selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
+              cityRule: city ?? cityRuleUtils,
+              defaultVehicle: defaultVehicle,
+            )
+          : PortraitLayout(
+              focused: _focused,
+              selectedDate: _selectedDate,
+              selectedVehicle: selectedVehicle,
+              colorsScheduleEnabled: _colorsScheduleEnabled,
+              onSelectedVehicle: (vehicle) {
+                setState(() => selectedVehicle = vehicle);
+              },
+              onDaySelected: (sel, foc) => setState(() {
+                _selectedDate = sel;
+                _focused = foc;
+              }),
+              onPageChanged: (p0) => setState(() => _focused = p0),
+              onChangedSwitch: (v) =>
+                  setState(() => _colorsScheduleEnabled = v),
+              restricted: restricted,
+              calDays: calDays,
+              vehiclePlates: vehiclePlates,
+              vehicle: selectedVehicle ?? defaultVehicle ?? vehicleDefaultUtils,
+              cityRule: city ?? cityRuleUtils,
+              defaultVehicle: defaultVehicle,
+            ),
     );
   }
 }

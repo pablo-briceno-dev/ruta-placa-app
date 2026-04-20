@@ -145,6 +145,7 @@ class _RouteScreenState extends ConsumerState<RouteScreen> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       builder: (_) => AddCitySheet(
         availableCities: rules.where((r) => !current.contains(r.id)).toList(),
         onSelect: (cityRule) {
