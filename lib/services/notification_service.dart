@@ -7,6 +7,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
 import 'package:ruta_placa/models/city_rule.dart';
 import 'package:ruta_placa/models/vehicle.dart';
+import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/services/city_rules_reader.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -54,18 +55,6 @@ class NotificationService {
 
     if (!settings.notificationsEnabled) {
       return;
-    }
-
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-
-    if (androidPlugin != null) {
-      final granted = await androidPlugin.requestExactAlarmsPermission();
-      if (granted != true) {
-        return;
-      }
     }
 
     final now = DateTime.now();
@@ -117,7 +106,43 @@ class NotificationService {
         }
       }
 
-      // ... mismo para sameDayEnabled
+      if (settings.sameDayEnabled) {
+        final today = DateTime(now.year, now.month, now.day);
+        final result = PicoPlacaCalculator.checkPlate(
+          cityRule: cityRule,
+          plate: vehicle.plate,
+          vehicleType: vehicle.vehicleType,
+          date: today,
+          plateOrigin: vehicle.plateOrigin,
+        );
+
+        if (result.hasRestriction || result.appliesToAll) {
+          // ✅ Calcular 1 hora antes del morningStart de la restricción
+          final restrictionStart = _parseRestrictionStart(
+            cityRule,
+            vehicle.vehicleType,
+            today,
+          );
+
+          if (restrictionStart != null) {
+            final notifTime = restrictionStart.subtract(
+              const Duration(hours: 1),
+            );
+
+            if (notifTime.isAfter(now)) {
+              await _schedule(
+                id: _idForVehicle(vehicle.id!, 1),
+                title: 'Pico y Placa hoy — ${vehicle.alias}',
+                body: _buildBody(vehicle, result, today),
+                time: notifTime,
+              );
+              scheduled++;
+            } else {
+              _log('   ⏭️ Saltado — notificación del mismo día ya pasó');
+            }
+          }
+        }
+      }
     }
 
     _log('✅ scheduleAll completado — $scheduled notificaciones programadas');
@@ -238,5 +263,30 @@ class NotificationService {
 
   void _log(String msg) {
     if (kDebugMode) debugPrint(msg);
+  }
+
+  DateTime? _parseRestrictionStart(
+    CityRule cityRule,
+    VehicleType vehicleType,
+    DateTime date,
+  ) {
+    // Busca la restricción que aplica al tipo de vehículo
+    final restriction = cityRule.restrictions[vehicleType];
+
+    final morningStart = restriction!.morningStart; // "06:00"
+    final parts = morningStart.toString().split(':');
+    if (parts.length != 2) return null;
+
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+
+    // Caso especial: si morningStart es "00:00" (restricción todo el día)
+    // notificar a las 07:00 por defecto para no molestar a medianoche
+    if (hour == 0 && minute == 0) {
+      return DateTime(date.year, date.month, date.day, 7, 0);
+    }
+
+    return DateTime(date.year, date.month, date.day, hour, minute);
   }
 }
