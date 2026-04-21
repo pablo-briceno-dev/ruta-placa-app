@@ -41,6 +41,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         multiDexEnabled = true
+
+        multiDexKeepProguard = File("multidex-config.pro")
     }
 
     signingConfigs {
@@ -67,6 +69,7 @@ flutter {
 }
 
 dependencies {
+    implementation("androidx.multidex:multidex:2.0.1")
     // ✅ Agregar esta dependencia
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

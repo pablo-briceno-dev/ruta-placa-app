@@ -105,56 +105,74 @@ class RulesService {
   Future<List<CityRule>?> _fetchFromNetwork({
     void Function(double)? onProgress,
   }) async {
-    final request = http.Request('GET', Uri.parse(_rulesUrl));
-    final response = await request.send().timeout(const Duration(seconds: 30));
+    try {
+      final request = http.Request('GET', Uri.parse(_rulesUrl));
+      final response = await request.send().timeout(
+        const Duration(seconds: 60),
+      );
 
-    if (response.statusCode != 200) return null;
+      if (response.statusCode != 200) {
+        // Guardar el error para debug
+        await _prefs.setString(
+          'last_error',
+          'HTTP ${response.statusCode} al descargar reglas',
+        );
+        return null;
+      }
 
-    final total = response.contentLength ?? 0;
-    int received = 0;
-    final bytes = <int>[];
+      final total = response.contentLength ?? 0;
+      int received = 0;
+      final bytes = <int>[];
 
-    await for (final chunk in response.stream) {
-      bytes.addAll(chunk);
-      received += chunk.length;
-      if (total > 0) onProgress?.call(received / total);
+      await for (final chunk in response.stream) {
+        bytes.addAll(chunk);
+        received += chunk.length;
+        if (total > 0) onProgress?.call(received / total);
+      }
+
+      final body = utf8.decode(bytes);
+      final json = jsonDecode(body) as Map<String, dynamic>;
+
+      final newVersion = json['version'] as String;
+      final newLastUpdatedStr = json['lastUpdated'] as String;
+      final newLastUpdated = DateTime.parse(newLastUpdatedStr);
+
+      final cachedVersion = _prefs.getString(_keyVersion);
+      final cachedLastUpdatedStr = _prefs.getString(_keyLastUpdated);
+      final cachedLastUpdated = cachedLastUpdatedStr != null
+          ? DateTime.tryParse(cachedLastUpdatedStr)
+          : null;
+
+      // Guardar timestamp de última consulta siempre
+      await _prefs.setInt(_keyLastCheck, DateTime.now().millisecondsSinceEpoch);
+
+      final isSameVersion = newVersion == cachedVersion;
+      final isSameDate =
+          cachedLastUpdated != null &&
+          !newLastUpdated.isAfter(cachedLastUpdated);
+
+      // Misma versión y misma fecha → usar caché existente
+      if (isSameVersion && isSameDate) {
+        final path = _prefs.getString(_keyRulesPath);
+        final content = path != null ? await _readFile(path) : null;
+        return _loadFromCache(content);
+      }
+
+      // Nueva versión → guardar archivo y actualizar prefs
+      final path = await _saveToFile(body);
+      await _prefs.setString(_keyRulesPath, path);
+      await _prefs.setString(_keyVersion, newVersion);
+      await _prefs.setString(_keyLastUpdated, newLastUpdatedStr);
+
+      debugPrint(
+        'RulesService: actualizado a $newVersion ($newLastUpdatedStr)',
+      );
+      return _parseRules(json);
+    } catch (e) {
+      // ✅ Guardar el error en prefs para poder leerlo
+      await _prefs.setString('last_error', e.toString());
+      rethrow;
     }
-
-    final body = utf8.decode(bytes);
-    final json = jsonDecode(body) as Map<String, dynamic>;
-
-    final newVersion = json['version'] as String;
-    final newLastUpdatedStr = json['lastUpdated'] as String;
-    final newLastUpdated = DateTime.parse(newLastUpdatedStr);
-
-    final cachedVersion = _prefs.getString(_keyVersion);
-    final cachedLastUpdatedStr = _prefs.getString(_keyLastUpdated);
-    final cachedLastUpdated = cachedLastUpdatedStr != null
-        ? DateTime.tryParse(cachedLastUpdatedStr)
-        : null;
-
-    // Guardar timestamp de última consulta siempre
-    await _prefs.setInt(_keyLastCheck, DateTime.now().millisecondsSinceEpoch);
-
-    final isSameVersion = newVersion == cachedVersion;
-    final isSameDate =
-        cachedLastUpdated != null && !newLastUpdated.isAfter(cachedLastUpdated);
-
-    // Misma versión y misma fecha → usar caché existente
-    if (isSameVersion && isSameDate) {
-      final path = _prefs.getString(_keyRulesPath);
-      final content = path != null ? await _readFile(path) : null;
-      return _loadFromCache(content);
-    }
-
-    // Nueva versión → guardar archivo y actualizar prefs
-    final path = await _saveToFile(body);
-    await _prefs.setString(_keyRulesPath, path);
-    await _prefs.setString(_keyVersion, newVersion);
-    await _prefs.setString(_keyLastUpdated, newLastUpdatedStr);
-
-    debugPrint('RulesService: actualizado a $newVersion ($newLastUpdatedStr)');
-    return _parseRules(json);
   }
 
   // Parseo ----------------------------------------------
@@ -242,4 +260,7 @@ class RulesService {
     final formatted = formatter.format(date);
     return formatted[0].toUpperCase() + formatted.substring(1);
   }
+
+  // En RulesService agregar getter
+  String? get lastError => _prefs.getString('last_error');
 }

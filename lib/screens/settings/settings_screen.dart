@@ -432,6 +432,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
+          // const Divider(height: 1),
+          // Consumer(
+          //   builder: (context, ref, _) {
+          //     final lastError = RulesService.instance.lastError;
+          //     if (lastError == null) return const SizedBox.shrink();
+          //     return ListTile(
+          //       leading: const Icon(Icons.error_outline, color: Colors.red),
+          //       title: const Text('Último error de descarga'),
+          //       subtitle: Text(lastError, style: const TextStyle(fontSize: 11)),
+          //     );
+          //   },
+          // ),
           const SizedBox(height: 24),
           Center(
             child: Text(
