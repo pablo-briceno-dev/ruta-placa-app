@@ -105,15 +105,14 @@ class RulesService {
   Future<List<CityRule>?> _fetchFromNetwork({
     void Function(double)? onProgress,
   }) async {
-    final request  = http.Request('GET', Uri.parse(_rulesUrl));
-    final response = await request.send()
-        .timeout(const Duration(seconds: 15));
+    final request = http.Request('GET', Uri.parse(_rulesUrl));
+    final response = await request.send().timeout(const Duration(seconds: 30));
 
     if (response.statusCode != 200) return null;
 
     final total = response.contentLength ?? 0;
     int received = 0;
-    final bytes  = <int>[];
+    final bytes = <int>[];
 
     await for (final chunk in response.stream) {
       bytes.addAll(chunk);
@@ -124,42 +123,42 @@ class RulesService {
     final body = utf8.decode(bytes);
     final json = jsonDecode(body) as Map<String, dynamic>;
 
-    final newVersion        = json['version']     as String;
-    final newLastUpdatedStr = json['lastUpdated']  as String;
-    final newLastUpdated    = DateTime.parse(newLastUpdatedStr);
+    final newVersion = json['version'] as String;
+    final newLastUpdatedStr = json['lastUpdated'] as String;
+    final newLastUpdated = DateTime.parse(newLastUpdatedStr);
 
-    final cachedVersion        = _prefs.getString(_keyVersion);
+    final cachedVersion = _prefs.getString(_keyVersion);
     final cachedLastUpdatedStr = _prefs.getString(_keyLastUpdated);
-    final cachedLastUpdated    = cachedLastUpdatedStr != null
-        ? DateTime.tryParse(cachedLastUpdatedStr) : null;
+    final cachedLastUpdated = cachedLastUpdatedStr != null
+        ? DateTime.tryParse(cachedLastUpdatedStr)
+        : null;
 
     // Guardar timestamp de última consulta siempre
-    await _prefs.setInt(
-        _keyLastCheck, DateTime.now().millisecondsSinceEpoch);
+    await _prefs.setInt(_keyLastCheck, DateTime.now().millisecondsSinceEpoch);
 
     final isSameVersion = newVersion == cachedVersion;
-    final isSameDate    = cachedLastUpdated != null &&
-        !newLastUpdated.isAfter(cachedLastUpdated);
+    final isSameDate =
+        cachedLastUpdated != null && !newLastUpdated.isAfter(cachedLastUpdated);
 
     // Misma versión y misma fecha → usar caché existente
     if (isSameVersion && isSameDate) {
-      final path    = _prefs.getString(_keyRulesPath);
+      final path = _prefs.getString(_keyRulesPath);
       final content = path != null ? await _readFile(path) : null;
       return _loadFromCache(content);
     }
 
     // Nueva versión → guardar archivo y actualizar prefs
     final path = await _saveToFile(body);
-    await _prefs.setString(_keyRulesPath,    path);
-    await _prefs.setString(_keyVersion,      newVersion);
-    await _prefs.setString(_keyLastUpdated,  newLastUpdatedStr);
+    await _prefs.setString(_keyRulesPath, path);
+    await _prefs.setString(_keyVersion, newVersion);
+    await _prefs.setString(_keyLastUpdated, newLastUpdatedStr);
 
     debugPrint('RulesService: actualizado a $newVersion ($newLastUpdatedStr)');
     return _parseRules(json);
   }
 
   // Parseo ----------------------------------------------
-   List<CityRule> _loadFromCache(String? content) {
+  List<CityRule> _loadFromCache(String? content) {
     if (content == null) return _fallbackRules();
     try {
       return _parseRules(jsonDecode(content) as Map<String, dynamic>);
@@ -181,23 +180,27 @@ class RulesService {
     debugPrint('RulesService: usando fallback hardcodeado');
     return [
       CityRule(
-        id:    'pasto',
-        name:  'Pasto',
+        id: 'pasto',
+        name: 'Pasto',
         emoji: '🏙️',
         restrictions: {
           VehicleType.particular: VehicleRestriction(
             scheduleType: ScheduleType.rotatingWeeklyDaily,
-            schedule:     {},
+            schedule: {},
             rotation: RotationRule(
               cycleStartDate: DateTime(2026, DateTime.april, 6),
-              cycleLength:    5,
-              weekdaysApply:  [1, 2, 3, 4, 5],
-              rotationCycle:  [
-                [0, 1], [2, 3], [4, 5], [6, 7], [8, 9],
+              cycleLength: 5,
+              weekdaysApply: [1, 2, 3, 4, 5],
+              rotationCycle: [
+                [0, 1],
+                [2, 3],
+                [4, 5],
+                [6, 7],
+                [8, 9],
               ],
             ),
-            morningStart: const TimeOfDay(hour: 7,  minute: 30),
-            morningEnd:   const TimeOfDay(hour: 19, minute: 0),
+            morningStart: const TimeOfDay(hour: 7, minute: 30),
+            morningEnd: const TimeOfDay(hour: 19, minute: 0),
           ),
         },
       ),
@@ -221,7 +224,7 @@ class RulesService {
           .get(Uri.parse(_rulesUrl))
           .timeout(const Duration(seconds: 10));
       if (response.statusCode != 200) return false;
-      final json       = jsonDecode(response.body) as Map<String, dynamic>;
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
       final newVersion = json['version'] as String;
       return newVersion != _prefs.getString(_keyVersion);
     } catch (_) {
@@ -234,7 +237,7 @@ class RulesService {
   String? get cachedLastCheck {
     final ms = _prefs.getInt(_keyLastCheck);
     if (ms == null) return null;
-    final date      = DateTime.fromMillisecondsSinceEpoch(ms);
+    final date = DateTime.fromMillisecondsSinceEpoch(ms);
     final formatter = DateFormat("MMMM d 'del' yyyy", 'es');
     final formatted = formatter.format(date);
     return formatted[0].toUpperCase() + formatted.substring(1);
