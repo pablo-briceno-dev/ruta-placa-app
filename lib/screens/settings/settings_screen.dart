@@ -5,8 +5,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ruta_placa/core/utils/time_format_utils.dart';
 import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
+import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 import 'package:ruta_placa/providers/theme_provider.dart';
 import 'package:ruta_placa/providers/vehicles_provider.dart';
+import 'package:ruta_placa/screens/settings/city_default_notifier_sheet.dart';
 import 'package:ruta_placa/screens/settings/info_tile.dart';
 import 'package:ruta_placa/screens/settings/section_card.dart';
 import 'package:ruta_placa/screens/settings/section_header.dart';
@@ -46,6 +48,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notifState = ref.watch(notificationSettingsProvider);
     final vehicles = ref.watch(vehiclesProvider).vehicles;
     final cities = ref.watch(rulesProvider).cities;
+    final sharedPrefs = ref.watch(preferencesProvider);
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -121,6 +124,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   TestNotificacion(),
                   // ------------------------------------------------
                 ],
+                const Divider(height: 1),
+                // Ciudad por defecto para las notificaciones
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 0,
+                  ),
+                  leading: _iconBox(
+                    Icons.location_city_outlined,
+                    Colors.cyan.withValues(alpha: 0.6),
+                  ),
+                  title: Text(
+                    'Ciudad para el aviso',
+                    style: textTheme.bodyMedium,
+                  ),
+                  subtitle: Text(
+                    'Ciudad elegida por defecto para las notificaciones',
+                    style: textTheme.bodySmall,
+                  ),
+                  trailing: GestureDetector(
+                    onTap: () => showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => const CityDefaultNotifierSheet(),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        ref
+                                .watch(cityByIdProvider(sharedPrefs ?? 'pasto'))
+                                ?.name ??
+                            'Pasto',
+                        style: textTheme.titleSmall?.copyWith(
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
                 const Divider(height: 1),
                 // Dia anterior
                 SwitchListTile(
@@ -432,18 +481,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ],
           ),
-          // const Divider(height: 1),
-          // Consumer(
-          //   builder: (context, ref, _) {
-          //     final lastError = RulesService.instance.lastError;
-          //     if (lastError == null) return const SizedBox.shrink();
-          //     return ListTile(
-          //       leading: const Icon(Icons.error_outline, color: Colors.red),
-          //       title: const Text('Último error de descarga'),
-          //       subtitle: Text(lastError, style: const TextStyle(fontSize: 11)),
-          //     );
-          //   },
-          // ),
           const SizedBox(height: 24),
           Center(
             child: Text(
@@ -509,10 +546,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           dayBeforeMinute: picked.minute,
         ),
       );
-      // if (kDebugMode) {
-      //   await Future.delayed(const Duration(seconds: 2));
-      //   await NotificationService.instance.fireNow(id: 20);
-      // }
 
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

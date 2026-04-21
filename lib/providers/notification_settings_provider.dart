@@ -12,6 +12,7 @@ class NotificationSettings {
   // IDs de vehículos con notificaciones activas
   // null = todos activos
   final Set<int> disabledVehicleIds;
+  final String cityDefault;
 
   const NotificationSettings({
     this.notificationsEnabled = false,
@@ -20,6 +21,7 @@ class NotificationSettings {
     this.dayBeforeMinute = 0,
     this.sameDayEnabled = true,
     this.disabledVehicleIds = const {},
+    this.cityDefault = '',
   });
 
   bool isVehicleEnabled(int id) => !disabledVehicleIds.contains(id);
@@ -31,6 +33,7 @@ class NotificationSettings {
     int? dayBeforeMinute,
     bool? sameDayEnabled,
     Set<int>? disabledVehicleIds,
+    String? cityDefault,
   }) => NotificationSettings(
     notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
     dayBeforeEnabled: dayBeforeEnabled ?? this.dayBeforeEnabled,
@@ -38,6 +41,7 @@ class NotificationSettings {
     dayBeforeMinute: dayBeforeMinute ?? this.dayBeforeMinute,
     sameDayEnabled: sameDayEnabled ?? this.sameDayEnabled,
     disabledVehicleIds: disabledVehicleIds ?? this.disabledVehicleIds,
+    cityDefault: cityDefault ?? this.cityDefault,
   );
 
   String dayBeforeTimeFormatted(bool use24h) => formatTimeOfDayRaw(
@@ -70,6 +74,7 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       dayBeforeMinute: p.getInt('notif_db_minute') ?? 0,
       sameDayEnabled: p.getBool('notif_same_day') ?? true,
       disabledVehicleIds: vehicleIds,
+      cityDefault: p.getString('notif_city_default') ?? '',
     );
     debugPrint('📦 Loaded disabledVehicleIds: $vehicleIds');
   }
@@ -85,6 +90,7 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       'notif_disabled_vehicle_ids',
       state.disabledVehicleIds.map((e) => e.toString()).toList(),
     );
+    await p.setString('notif_city_default', state.cityDefault);
   }
 
   Future<void> setEnabled(bool value) async {
@@ -115,6 +121,11 @@ class NotificationSettingsNotifier extends StateNotifier<NotificationSettings> {
       ids.remove(id);
     }
     state = state.copyWith(disabledVehicleIds: ids);
+    await _save();
+  }
+
+  Future<void> setCityDefault(String cityId) async {
+    state = state.copyWith(cityDefault: cityId);
     await _save();
   }
 }

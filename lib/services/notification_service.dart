@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:ruta_placa/logic/pico_placa_calculator.dart';
@@ -10,8 +9,8 @@ import 'package:ruta_placa/models/vehicle.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/services/city_rules_reader.dart';
-import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart' as tz;
 
 class NotificationService {
   NotificationService._();
@@ -66,7 +65,9 @@ class NotificationService {
         continue;
       }
 
-      final cityRule = rulesReader.getCity(vehicle.cityId);
+      final cityRule = rulesReader.getCity(
+        settings.cityDefault.isNotEmpty ? settings.cityDefault : vehicle.cityId,
+      );
 
       if (cityRule == null) {
         _log('   ⏭️ Saltado — ciudad no encontrada');

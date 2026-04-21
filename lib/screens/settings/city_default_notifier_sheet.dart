@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:ruta_placa/providers/cities_provider.dart';
+import 'package:ruta_placa/data/key_preferences.dart';
+import 'package:ruta_placa/providers/notification_settings_provider.dart';
 import 'package:ruta_placa/providers/rules_provider.dart';
+import 'package:ruta_placa/providers/shared_preferences_provider.dart';
 
-class CitySelectorSheetWidget extends ConsumerStatefulWidget {
-  const CitySelectorSheetWidget({super.key});
+class CityDefaultNotifierSheet extends ConsumerStatefulWidget {
+  const CityDefaultNotifierSheet({super.key});
 
   @override
-  ConsumerState<CitySelectorSheetWidget> createState() =>
-      _CitySelectorSheetWidgetState();
+  ConsumerState<CityDefaultNotifierSheet> createState() =>
+      _CityDefaultNotifierSheetState();
 }
 
-class _CitySelectorSheetWidgetState
-    extends ConsumerState<CitySelectorSheetWidget> {
+class _CityDefaultNotifierSheetState
+    extends ConsumerState<CityDefaultNotifierSheet> {
   final _searchController = TextEditingController();
 
   String query = '';
@@ -20,11 +22,11 @@ class _CitySelectorSheetWidgetState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final viewInsets = MediaQuery.viewInsetsOf(context);
     final cities = ref.watch(rulesProvider).cities;
     final filtered = cities
         .where((c) => c.name.toLowerCase().contains(query.toLowerCase()))
         .toList();
-    final viewInsets = MediaQuery.viewInsetsOf(context);
     final screenH = MediaQuery.sizeOf(context).height;
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
@@ -77,11 +79,14 @@ class _CitySelectorSheetWidgetState
                   return ListTile(
                     dense: isLandscape,
                     leading: const Icon(Icons.location_city),
-                    title: Text(city.name),
+                    title: Text(city.name, overflow: TextOverflow.ellipsis),
                     onTap: () async {
                       await ref
-                          .read(selectedCityProvider.notifier)
-                          .setCity(city.id);
+                          .read(preferencesProvider.notifier)
+                          .setString(selectedCityNotify, city.id);
+                      await ref
+                          .read(notificationSettingsProvider.notifier)
+                          .setCityDefault(city.id);
 
                       if (context.mounted) {
                         Navigator.pop(context);
