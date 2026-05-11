@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:ruta_placa/config/secrets.dart';
 
 class AdmobService {
   AdmobService._();
@@ -19,7 +20,7 @@ class AdmobService {
           : 'ca-app-pub-3940256099942544/2934735716';  // test iOS
     }
     return Platform.isAndroid
-        ? 'ca-app-pub-9278114943642179/6887756447'   // ← reemplaza
+        ? admobBannerId   // ← reemplaza
         : 'ca-app-pub-TU_ID/TU_BANNER_IOS';      // ← reemplaza
   }
 
@@ -30,7 +31,7 @@ class AdmobService {
           : 'ca-app-pub-3940256099942544/4411468910';
     }
     return Platform.isAndroid
-        ? 'ca-app-pub-9278114943642179/1739371546'
+        ? admobInterstitialId
         : 'ca-app-pub-TU_ID/TU_INTER_IOS';
   }
 
