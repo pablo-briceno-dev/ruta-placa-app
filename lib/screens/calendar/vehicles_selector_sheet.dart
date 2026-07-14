@@ -233,6 +233,10 @@ class _PortraitLayout extends StatelessWidget {
                     ),
                     items: const [
                       DropdownMenuItem(
+                        value: PlateOrigin.any,
+                        child: Text('Ninguna'),
+                      ),
+                      DropdownMenuItem(
                         value: PlateOrigin.metropolitan,
                         child: Text('Área metropolitana o de esta ciudad'),
                       ),
@@ -416,6 +420,10 @@ class _LandscapeLayout extends StatelessWidget {
                       labelText: 'Origen de la placa',
                     ),
                     items: const [
+                      DropdownMenuItem(
+                        value: PlateOrigin.any,
+                        child: Text('Ninguna'),
+                      ),
                       DropdownMenuItem(
                         value: PlateOrigin.metropolitan,
                         child: Text('Área metropolitana o de esta ciudad'),

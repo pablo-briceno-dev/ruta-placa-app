@@ -149,6 +149,8 @@ class VehicleRestriction {
           laboralDays++;
         }
       }
+
+      cursor = cursor.add(const Duration(days: 1));
     }
 
     final cycleIndex = laboralDays % rotation!.cycleLength;
@@ -299,7 +301,10 @@ class VehicleRestriction {
     // pero solo un dígito del grupo
     if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
       // Lunes de la semana siguiente
-      final daysToNextMonday = weekday == DateTime.saturday ? 2 : 1;
+      // final daysToNextMonday = weekday == DateTime.saturday ? 2 : 1;
+      // Lunes de esa misma semana
+      final daysToNextMonday = weekday == DateTime.saturday ? -5 : -6;
+
       final nextMonday = date.add(Duration(days: daysToNextMonday));
 
       final mondayIndex = _weeklyDailyIndex(nextMonday);
@@ -368,9 +373,9 @@ class VehicleRestriction {
     if (weekday == DateTime.saturday || weekday == DateTime.sunday) {
       final isoWeek = _isoWeekNumber(date);
       if (isoWeek.isOdd) {
-        return PlatesResult(plates: [1, 3, 5, 7, 9]); // impares
-      } else {
         return PlatesResult(plates: [0, 2, 4, 6, 8]); // pares
+      } else {
+        return PlatesResult(plates: [1, 3, 5, 7, 9]); // impares
       }
     }
 
@@ -526,7 +531,7 @@ class VehicleRestriction {
     final diffDays = effectiveDate.difference(rotation!.cycleStartDate).inDays;
 
     // 0 = impar, 1 = par
-    final isPar = diffDays % 2 != 0;
+    final isPar = diffDays % 2 == 0;
 
     return PlatesResult(plates: isPar ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9]);
   }
@@ -587,11 +592,14 @@ class VehicleRestriction {
         ScheduleType.rotatingLTJWithWeekendSplit,
       'alternating_daily_monday_repeats_sunday' =>
         ScheduleType.alternatingDailyMondayRepeatsSunday,
+      'iso_week_weekend_with_holiday_bridge' =>
+        ScheduleType.isoWeekWeekendWithHolidayBridge,
       _ => ScheduleType.fixedWeekly,
     };
 
     Map<int, List<int>> schedule = {};
-    if (type == ScheduleType.fixedWeekly) {
+    if (type == ScheduleType.fixedWeekly ||
+        type == ScheduleType.fixedWeeklyWithRotatingSaturday) {
       final raw = json['schedule'] as Map<String, dynamic>? ?? {};
       schedule = raw.map(
         (key, value) => MapEntry(int.parse(key), List<int>.from(value as List)),

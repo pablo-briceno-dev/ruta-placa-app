@@ -30,7 +30,7 @@ class RotationRule {
       // Lee cycleLengthDays si existe, si no cycleLengthWeeks
       cycleLength: json['cycleLengthDays'] ?? json['cycleLengthWeeks'] ?? 5,
       weekdaysApply: List<int>.from(json['weekdaysApply']),
-      rotationCycle: (json['rotationCycle'] as List)
+      rotationCycle: (json['rotationCycle'] as List? ?? [])
           .map((e) => List<int>.from(e as List))
           .toList(),
       groupDays: (json['groupDays'] as List? ?? [])

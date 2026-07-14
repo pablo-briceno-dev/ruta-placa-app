@@ -36,6 +36,7 @@ class DayDetailPanel extends StatelessWidget {
       date: date,
       plateOrigin: vehicle.plateOrigin,
     );
+    debugPrint('r: ${r.restrictedPlates.toString()}');
 
     final borderColor = r.hasRestriction ? Colors.red : Colors.green;
     final iconData = r.hasRestriction

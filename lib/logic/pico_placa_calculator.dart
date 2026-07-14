@@ -5,6 +5,7 @@ import 'package:ruta_placa/models/holiday_behavior.dart';
 import 'package:ruta_placa/models/pico_placa_result.dart';
 import 'package:ruta_placa/models/plate_origin.dart';
 import 'package:ruta_placa/models/restriction_status.dart';
+import 'package:ruta_placa/models/schedule_type.dart';
 import 'package:ruta_placa/models/vehicle_restriction.dart';
 import 'package:ruta_placa/models/vehicle_type.dart';
 
@@ -256,6 +257,13 @@ class PicoPlacaCalculator {
   /// Verifica si el día de la semana está en weekdaysApply
   /// Para fixedWeekly usa el mapa schedule directamente
   static bool _dayApplies(VehicleRestriction r, int weekday) {
+    if (r.scheduleType == ScheduleType.rotatingWeeklyDailyWithWeekend) {
+      return true;
+    }
+    if (r.scheduleType == ScheduleType.fixedWeeklyWithRotatingSaturday) {
+      return r.schedule.containsKey(weekday) ||
+          r.rotation!.weekdaysApply.contains(weekday);
+    }
     if (r.rotation != null) {
       return r.rotation!.weekdaysApply.contains(weekday);
     }
