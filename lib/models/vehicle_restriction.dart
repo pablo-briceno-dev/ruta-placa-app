@@ -129,29 +129,7 @@ class VehicleRestriction {
   List<int> _rotatingDailyPlates(DateTime date) {
     if (rotation == null) return [];
 
-    int laboralDays = 0;
-    DateTime cursor = rotation!.cycleStartDate;
-
-    // Contar días laborales entre cycleStartDate y date (inclusive)
-    while (!_isSameDay(cursor, date)) {
-      if (cursor.isAfter(date)) return [];
-
-      final isWeekday =
-          cursor.weekday >= DateTime.monday &&
-          cursor.weekday <= DateTime.friday;
-      final cursorIsHoliday = holidays.isHoliday(cursor);
-
-      if (isWeekday) {
-        // ✅ Con countsButNoRestriction los festivos SÍ avanzan el ciclo
-        if (!cursorIsHoliday ||
-            holidayBehavior == HolidayBehavior.countsButNoRestriction ||
-            holidayBehavior == HolidayBehavior.appliesNormal) {
-          laboralDays++;
-        }
-      }
-
-      cursor = cursor.add(const Duration(days: 1));
-    }
+    int laboralDays = _getCycleDays(date);
 
     final cycleIndex = laboralDays % rotation!.cycleLength;
     return rotation!.rotationCycle[cycleIndex];
@@ -523,17 +501,14 @@ class VehicleRestriction {
   PlatesResult _alternatingDailyMondayRepeatsSundayResult(DateTime date) {
     if (rotation == null) return PlatesResult.empty();
 
-    // El lunes siempre usa el valor del domingo anterior
-    final effectiveDate = date.weekday == DateTime.monday
-        ? date.subtract(const Duration(days: 1))
-        : date;
+    int cycleDays = _getCycleDays(date);
+    int indexRotation = cycleDays % 2;
 
-    final diffDays = effectiveDate.difference(rotation!.cycleStartDate).inDays;
+    if (date.weekday == DateTime.monday) {
+      indexRotation = 1 - indexRotation;
+    }
 
-    // 0 = impar, 1 = par
-    final isPar = diffDays % 2 == 0;
-
-    return PlatesResult(plates: isPar ? [0, 2, 4, 6, 8] : [1, 3, 5, 7, 9]);
+    return PlatesResult(plates: rotation!.rotationCycle[indexRotation]);
   }
 
   // ----- Helpers -----------------
@@ -564,6 +539,78 @@ class VehicleRestriction {
         return date.weekday != DateTime.sunday;
       case ScheduleType.alternatingDailyMondayRepeatsSunday:
         return true; // aplica todos los días
+    }
+  }
+
+  /// Metodo para hallar los días desde una fecha hasta la fecha actual
+  /// solo incluyendo los días que se aplican a la restricción
+  int _getCycleDays(DateTime date) {
+    if (rotation == null) return 0;
+    int count = 0;
+    DateTime cursor = rotation!.cycleStartDate;
+
+    while (cursor.isBefore(date)) {
+      if (_advanceCycle(cursor)) {
+        count++;
+      }
+
+      cursor = cursor.add(const Duration(days: 1));
+    }
+
+    return count;
+  }
+
+  /// Metodo para aplicar o no el avance según el tipo de rotación
+  bool _advanceCycle(DateTime cursor) {
+    final applyWeekday = rotation!.weekdaysApply.contains(cursor.weekday);
+    final cursorIsHoliday = holidays.isHoliday(cursor);
+
+    switch (scheduleType) {
+      case ScheduleType.rotatingAlternating:
+        if (applyWeekday && _advanceCycleHoliday(cursorIsHoliday)) {
+          if (cursor.weekday == DateTime.monday) {
+            final fridayBefore = cursor.subtract(const Duration(days: 3));
+            final fridayBeforeHoliday = holidays.isHoliday(fridayBefore);
+            if (!fridayBeforeHoliday) {
+              return true;
+            } else {
+              return false;
+            }
+          } else {
+            return true;
+          }
+        }
+
+        return false;
+      case ScheduleType.rotatingDaily:
+        if (applyWeekday) {
+          if (_advanceCycleHoliday(cursorIsHoliday)) {
+            return true;
+          }
+        }
+        return false;
+      case ScheduleType.alternatingDailyMondayRepeatsSunday:
+        if (applyWeekday && cursor.weekday != DateTime.monday) {
+          if (_advanceCycleHoliday(cursorIsHoliday)) {
+            return true;
+          }
+        }
+        return false;
+      default:
+        return _advanceCycleHoliday(cursorIsHoliday);
+    }
+  }
+
+  /// Metodo para contar o no los festivos
+  bool _advanceCycleHoliday(bool isHoliday) {
+    switch (holidayBehavior) {
+      case HolidayBehavior.appliesNormal:
+      case HolidayBehavior.countsButNoRestriction:
+        return true;
+      case HolidayBehavior.noRestriction:
+        return false;
+      default:
+        return !isHoliday;
     }
   }
 

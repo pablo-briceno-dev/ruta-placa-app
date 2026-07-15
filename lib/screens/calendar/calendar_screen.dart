@@ -54,7 +54,6 @@ class _CalendaryScreenState extends ConsumerState<CalendarScreen> {
             ?.getPlates() ??
         cityRuleUtils.restrictions[VehicleType.particular]?.getPlates() ??
         [];
-    debugPrint("plates ${vehiclePlates.toString()}");
     final calDays = CalendarGenerator.generateMonth(
       year: _focused.year,
       month: _focused.month,
