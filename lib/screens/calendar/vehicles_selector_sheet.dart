@@ -227,10 +227,24 @@ class _PortraitLayout extends StatelessWidget {
                     true) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<PlateOrigin>(
+                    isExpanded: true,
                     initialValue: plateOrigin,
                     decoration: const InputDecoration(
                       labelText: 'Origen de la placa',
                     ),
+                    selectedItemBuilder: (context) => const [
+                      Text("Ninguna"),
+                      Text(
+                        "Área metropolitana",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        "Nacional / Extranjera",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
                     items: const [
                       DropdownMenuItem(
                         value: PlateOrigin.any,
@@ -415,10 +429,24 @@ class _LandscapeLayout extends StatelessWidget {
                     true) ...[
                   const SizedBox(height: 12),
                   DropdownButtonFormField<PlateOrigin>(
+                    isExpanded: true,
                     initialValue: plateOrigin,
                     decoration: const InputDecoration(
                       labelText: 'Origen de la placa',
                     ),
+                    selectedItemBuilder: (context) => const [
+                      Text("Ninguna"),
+                      Text(
+                        "Área metropolitana",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                      Text(
+                        "Nacional / Extranjera",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ],
                     items: const [
                       DropdownMenuItem(
                         value: PlateOrigin.any,
